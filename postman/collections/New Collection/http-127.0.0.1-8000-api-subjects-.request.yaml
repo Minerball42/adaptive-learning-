@@ -1,0 +1,10 @@
+$kind: http-request
+name: http://127.0.0.1:8000/api/subjects/
+description: ""
+url: http://127.0.0.1:8000/api/subjects/
+method: GET
+headers:
+  Authorization: Token bc615ffe8fcc1cb24a1e56b9345245929e9ce4ae
+auth:
+  type: noauth
+order: 1786777376794

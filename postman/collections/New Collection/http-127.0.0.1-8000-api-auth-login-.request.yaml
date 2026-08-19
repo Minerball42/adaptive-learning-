@@ -1,0 +1,17 @@
+$kind: http-request
+name: http://127.0.0.1:8000/api/auth/login/
+description: ""
+url: http://127.0.0.1:8000/api/auth/login/
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"username\": \"student1\",\r
+
+    \    \"password\": \"SALMAN123@ss\"\r
+
+    }\r\n"
+auth:
+  type: noauth
+order: 2814415972180605
