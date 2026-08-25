@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "courses",
     "quizzes",
     "progress",
+    "offline_sync",
 ]
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
