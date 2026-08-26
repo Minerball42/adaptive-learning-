@@ -1,0 +1,2926 @@
+openapi: 3.0.3
+info:
+  title: Adaptive Learning Platform API
+  version: 1.0.0
+  description: Backend API for the Adaptive Learning Platform. Includes student authentication,
+    curriculum, adaptive quizzes, progress tracking, teacher analytics, and offline
+    synchronization.
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: Authenticate a registered student and return a token.
+      summary: Student login
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentLoginResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/auth/profile/:
+    get:
+      operationId: auth_profile_retrieve
+      description: Return the authenticated student's profile.
+      summary: Get student profile
+      tags:
+      - Authentication
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProfile'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: Create a new student account and return an authentication token.
+      summary: Register a student
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentRegister'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StudentRegister'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StudentRegister'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentRegisterResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/auth/students/{student_id}/grade/:
+    post:
+      operationId: auth_students_grade_create
+      description: Allow a teacher or administrator to assign a grade to a student.
+      summary: Assign grade to student
+      parameters:
+      - in: path
+        name: student_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignStudentGradeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssignStudentGradeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssignStudentGradeRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignStudentGradeResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/auth/teacher/login/:
+    post:
+      operationId: auth_teacher_login_create
+      description: Authenticate a registered teacher and return a token.
+      summary: Teacher login
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherLoginResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/courses/academic-years/:
+    get:
+      operationId: courses_academic_years_list
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AcademicYear'
+          description: ''
+  /api/courses/academic-years/{id}/:
+    get:
+      operationId: courses_academic_years_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this academic year.
+        required: true
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicYear'
+          description: ''
+  /api/courses/boards/:
+    get:
+      operationId: courses_boards_list
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Board'
+          description: ''
+  /api/courses/boards/{id}/:
+    get:
+      operationId: courses_boards_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this board.
+        required: true
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+          description: ''
+  /api/courses/chapters/:
+    get:
+      operationId: courses_chapters_list
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chapter'
+          description: ''
+  /api/courses/chapters/{id}/:
+    get:
+      operationId: courses_chapters_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this chapter.
+        required: true
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chapter'
+          description: ''
+  /api/courses/grades/:
+    get:
+      operationId: courses_grades_list
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grade'
+          description: ''
+  /api/courses/grades/{id}/:
+    get:
+      operationId: courses_grades_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grade.
+        required: true
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+          description: ''
+  /api/courses/learning-content/:
+    get:
+      operationId: courses_learning_content_list
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LearningContent'
+          description: ''
+  /api/courses/learning-content/{id}/:
+    get:
+      operationId: courses_learning_content_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this learning content.
+        required: true
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningContent'
+          description: ''
+  /api/courses/notes/:
+    get:
+      operationId: courses_notes_list
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+          description: ''
+  /api/courses/notes/{id}/:
+    get:
+      operationId: courses_notes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this note.
+        required: true
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
+  /api/courses/subjects/:
+    get:
+      operationId: courses_subjects_list
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subject'
+          description: ''
+  /api/courses/subjects/{id}/:
+    get:
+      operationId: courses_subjects_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subject.
+        required: true
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+          description: ''
+  /api/courses/topics/:
+    get:
+      operationId: courses_topics_list
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Topic'
+          description: ''
+  /api/courses/topics/{id}/:
+    get:
+      operationId: courses_topics_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this topic.
+        required: true
+      tags:
+      - courses
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+          description: ''
+  /api/progress/attempts/:
+    get:
+      operationId: progress_attempts_list
+      description: Return quiz attempts and detailed answers. This endpoint is restricted
+        to teachers or administrators.
+      summary: Get quiz attempt results
+      tags:
+      - Progress
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuizAttemptResult'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+  /api/progress/chapter-progress/:
+    get:
+      operationId: progress_chapter_progress_retrieve
+      description: Return chapter-level completion, mastery and topic progress for
+        the authenticated student.
+      summary: Get chapter progress
+      tags:
+      - Progress
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChapterProgressResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+  /api/progress/dashboard/:
+    get:
+      operationId: progress_dashboard_retrieve
+      description: Return the authenticated student's dashboard including learning
+        progress, chapter completion, recommendations, continue-learning information
+        and recent quiz activity.
+      summary: Get student dashboard
+      tags:
+      - Progress
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+  /api/progress/learning-path/:
+    get:
+      operationId: progress_learning_path_retrieve
+      description: Return the authenticated student's ordered learning path including
+        available, completed and locked topics.
+      summary: Get student learning path
+      tags:
+      - Progress
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningPathResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+  /api/progress/my-recommendations/:
+    get:
+      operationId: progress_my_recommendations_retrieve
+      description: Return personalized learning recommendations based on the authenticated
+        student's topic mastery.
+      summary: Get learning recommendations
+      tags:
+      - Progress
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+  /api/progress/my-topic-performance/:
+    get:
+      operationId: progress_my_topic_performance_retrieve
+      description: Return topic performance information for the authenticated student.
+      summary: Get my topic performance
+      tags:
+      - Progress
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+  /api/progress/submit/:
+    post:
+      operationId: progress_submit_create
+      description: Submit answers for a standard quiz. All questions in the quiz must
+        be answered.
+      summary: Submit standard quiz
+      tags:
+      - Progress
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitQuizRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubmitQuizRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubmitQuizRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitQuizResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+  /api/progress/topic-performance/:
+    get:
+      operationId: progress_topic_performance_list
+      description: Return topic-level performance statistics grouped by student. Restricted
+        to teachers or admins.
+      summary: Get topic performance analytics
+      tags:
+      - Progress
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TopicPerformance'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressErrorResponse'
+          description: ''
+  /api/quizzes/adaptive/:
+    get:
+      operationId: quizzes_adaptive_retrieve
+      description: Create a new adaptive quiz session for the authenticated student.
+        Question difficulty is selected according to the student's current topic mastery.
+      summary: Create adaptive quiz session
+      parameters:
+      - in: query
+        name: topic
+        schema:
+          type: integer
+        description: ID of the topic for which an adaptive quiz should be generated.
+        required: true
+      tags:
+      - Adaptive Quiz
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdaptiveQuizResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizErrorResponse'
+          description: ''
+  /api/quizzes/adaptive/submit/:
+    post:
+      operationId: quizzes_adaptive_submit_create
+      description: Submit answers for an active adaptive quiz session. The server
+        validates the exact questions assigned to the session, scores the attempt,
+        recalculates mastery, and selects the next adaptive difficulty.
+      summary: Submit adaptive quiz session
+      tags:
+      - Adaptive Quiz
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdaptiveQuizSubmitRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdaptiveQuizSubmitRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdaptiveQuizSubmitRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdaptiveQuizSubmitResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizErrorResponse'
+          description: ''
+  /api/quizzes/questions/:
+    get:
+      operationId: quizzes_questions_list
+      tags:
+      - quizzes
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+          description: ''
+  /api/quizzes/questions/{id}/:
+    get:
+      operationId: quizzes_questions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this question.
+        required: true
+      tags:
+      - quizzes
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+          description: ''
+  /api/quizzes/quizzes/:
+    get:
+      operationId: quizzes_quizzes_list
+      tags:
+      - quizzes
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Quiz'
+          description: ''
+  /api/quizzes/quizzes/{id}/:
+    get:
+      operationId: quizzes_quizzes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this quiz.
+        required: true
+      tags:
+      - quizzes
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+          description: ''
+  /api/sync/batch/:
+    post:
+      operationId: sync_batch_create
+      description: Upload multiple offline quiz attempts in a single request. A maximum
+        of 50 attempts can be processed at once. Each attempt is synchronized independently
+        and duplicate client_attempt_id values are handled idempotently.
+      summary: Synchronize multiple offline attempts
+      tags:
+      - Offline Sync
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfflineBatchSyncRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OfflineBatchSyncRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OfflineBatchSyncRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineBatchSyncResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSyncErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSyncErrorResponse'
+          description: ''
+  /api/sync/quiz-attempts/:
+    post:
+      operationId: sync_quiz_attempts_create
+      description: Upload one quiz attempt completed while the student was offline.
+        The server validates the payload, scores the answers, creates the quiz attempt
+        and recalculates topic mastery. Reusing the same client_attempt_id returns
+        the existing synchronized attempt instead of creating a duplicate.
+      summary: Synchronize offline quiz attempt
+      tags:
+      - Offline Sync
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfflineQuizAttemptRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OfflineQuizAttemptRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OfflineQuizAttemptRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSyncSuccessResponse'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSyncSuccessResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSyncErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSyncErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSyncErrorResponse'
+          description: ''
+  /api/sync/status/:
+    get:
+      operationId: sync_status_retrieve
+      description: Return the authenticated student's offline synchronization summary
+        and up to the 50 most recent synchronization records.
+      summary: Get offline synchronization status
+      tags:
+      - Offline Sync
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSyncStatusResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSyncErrorResponse'
+          description: ''
+  /api/teacher/dashboard/:
+    get:
+      operationId: teacher_dashboard_retrieve
+      description: Return dashboard statistics and student summaries for students
+        belonging to the teacher's school.
+      summary: Get teacher dashboard
+      tags:
+      - Teacher
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherDashboardResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/teacher/recent-attempts/:
+    get:
+      operationId: teacher_recent_attempts_retrieve
+      description: Return recent quiz attempts from students in the teacher's school.
+      summary: Get recent student attempts
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Maximum number of attempts to return. Minimum 1 and maximum 100.
+      tags:
+      - Teacher
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherRecentAttemptsResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/teacher/students/:
+    get:
+      operationId: teacher_students_retrieve
+      description: Return students belonging to the authenticated teacher's school.
+      summary: List teacher's students
+      tags:
+      - Teacher
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherStudentsResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/teacher/students/{student_id}/progress/:
+    get:
+      operationId: teacher_students_progress_retrieve
+      description: Return complete progress information for a student belonging to
+        the teacher's school.
+      summary: Get student progress
+      parameters:
+      - in: path
+        name: student_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Teacher
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherStudentProgressResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/teacher/weak-topics/:
+    get:
+      operationId: teacher_weak_topics_retrieve
+      description: Identify weak and developing topics across students belonging to
+        the teacher's school.
+      summary: Get weak topic analytics
+      tags:
+      - Teacher
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherWeakTopicsResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+components:
+  schemas:
+    AcademicYear:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 20
+        is_active:
+          type: boolean
+        board:
+          type: integer
+      required:
+      - board
+      - id
+      - name
+    AdaptiveAnswerRequest:
+      type: object
+      properties:
+        question:
+          type: integer
+          minimum: 1
+        answer:
+          $ref: '#/components/schemas/AnswerEnum'
+      required:
+      - answer
+      - question
+    AdaptiveAttemptResult:
+      type: object
+      properties:
+        score:
+          type: integer
+        total_questions:
+          type: integer
+        percentage:
+          type: number
+          format: double
+      required:
+      - percentage
+      - score
+      - total_questions
+    AdaptiveDifficultyPerformance:
+      type: object
+      properties:
+        easy:
+          $ref: '#/components/schemas/AdaptiveDifficultyStats'
+        medium:
+          $ref: '#/components/schemas/AdaptiveDifficultyStats'
+        hard:
+          $ref: '#/components/schemas/AdaptiveDifficultyStats'
+      required:
+      - easy
+      - hard
+      - medium
+    AdaptiveDifficultyStats:
+      type: object
+      properties:
+        correct:
+          type: integer
+        total:
+          type: integer
+        percentage:
+          type: number
+          format: double
+      required:
+      - correct
+      - percentage
+      - total
+    AdaptiveMastery:
+      type: object
+      properties:
+        correct:
+          type: integer
+        total:
+          type: integer
+        attempt_count:
+          type: integer
+        percentage:
+          type: number
+          format: double
+        recent_percentage:
+          type: number
+          format: double
+        mastery_score:
+          type: number
+          format: double
+        level:
+          type: string
+        difficulty_performance:
+          $ref: '#/components/schemas/AdaptiveDifficultyPerformance'
+      required:
+      - attempt_count
+      - correct
+      - difficulty_performance
+      - level
+      - mastery_score
+      - percentage
+      - recent_percentage
+      - total
+    AdaptiveNextDifficulty:
+      type: object
+      properties:
+        value:
+          type: integer
+        name:
+          type: string
+      required:
+      - name
+      - value
+    AdaptiveQuizInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+      required:
+      - description
+      - id
+      - title
+    AdaptiveQuizResponse:
+      type: object
+      properties:
+        session:
+          $ref: '#/components/schemas/AdaptiveQuizSession'
+        topic:
+          $ref: '#/components/schemas/AdaptiveQuizTopic'
+        mastery:
+          $ref: '#/components/schemas/AdaptiveMastery'
+        adaptive_selection:
+          $ref: '#/components/schemas/AdaptiveSelection'
+        quiz:
+          $ref: '#/components/schemas/AdaptiveQuizInfo'
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Question'
+      required:
+      - adaptive_selection
+      - mastery
+      - questions
+      - quiz
+      - session
+      - topic
+    AdaptiveQuizSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - expires_at
+      - id
+      - status
+    AdaptiveQuizSubmitRequest:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdaptiveAnswerRequest'
+      required:
+      - answers
+      - session_id
+    AdaptiveQuizSubmitResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        session:
+          $ref: '#/components/schemas/AdaptiveSubmittedSession'
+        attempt_id:
+          type: integer
+        topic:
+          $ref: '#/components/schemas/AdaptiveSubmitTopic'
+        quiz:
+          $ref: '#/components/schemas/AdaptiveSubmitQuiz'
+        attempt:
+          $ref: '#/components/schemas/AdaptiveAttemptResult'
+        mastery_before:
+          $ref: '#/components/schemas/AdaptiveMastery'
+        mastery_after:
+          $ref: '#/components/schemas/AdaptiveMastery'
+        next_adaptive_difficulty:
+          $ref: '#/components/schemas/AdaptiveNextDifficulty'
+      required:
+      - attempt
+      - attempt_id
+      - mastery_after
+      - mastery_before
+      - message
+      - next_adaptive_difficulty
+      - quiz
+      - session
+      - topic
+    AdaptiveQuizTopic:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        chapter:
+          type: string
+        subject:
+          type: string
+      required:
+      - chapter
+      - id
+      - name
+      - subject
+    AdaptiveSelection:
+      type: object
+      properties:
+        difficulty_value:
+          type: integer
+        difficulty:
+          type: string
+        question_limit:
+          type: integer
+        fallback_used:
+          type: boolean
+        actual_difficulties:
+          type: array
+          items:
+            type: integer
+      required:
+      - actual_difficulties
+      - difficulty
+      - difficulty_value
+      - fallback_used
+      - question_limit
+    AdaptiveSubmitQuiz:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+      required:
+      - id
+      - title
+    AdaptiveSubmitTopic:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    AdaptiveSubmittedSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - status
+      - submitted_at
+    AnswerEnum:
+      enum:
+      - A
+      - B
+      - C
+      - D
+      type: string
+      description: |-
+        * `A` - A
+        * `B` - B
+        * `C` - C
+        * `D` - D
+    AssignStudentGradeRequest:
+      type: object
+      properties:
+        grade:
+          type: integer
+          minimum: 1
+      required:
+      - grade
+    AssignStudentGradeResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        student:
+          $ref: '#/components/schemas/StudentProfile'
+      required:
+      - message
+      - student
+    Board:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 30
+        name:
+          type: string
+          maxLength: 200
+        state:
+          type: string
+          maxLength: 100
+        country:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
+      required:
+      - code
+      - id
+      - name
+    Chapter:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        chapter_number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        description:
+          type: string
+        subject:
+          type: integer
+      required:
+      - id
+      - name
+      - subject
+    ChapterProgressItem:
+      type: object
+      properties:
+        chapter_id:
+          type: integer
+        chapter_number:
+          type: integer
+        chapter_name:
+          type: string
+        subject_id:
+          type: integer
+        subject_name:
+          type: string
+        status:
+          type: string
+        total_topics:
+          type: integer
+        started_topics:
+          type: integer
+        completed_topics:
+          type: integer
+        remaining_topics:
+          type: integer
+        completion_percentage:
+          type: number
+          format: double
+        average_mastery:
+          type: number
+          format: double
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterProgressTopic'
+      required:
+      - average_mastery
+      - chapter_id
+      - chapter_name
+      - chapter_number
+      - completed_topics
+      - completion_percentage
+      - remaining_topics
+      - started_topics
+      - status
+      - subject_id
+      - subject_name
+      - topics
+      - total_topics
+    ChapterProgressResponse:
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/ChapterProgressSummary'
+        chapters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterProgressItem'
+      required:
+      - chapters
+      - summary
+    ChapterProgressSummary:
+      type: object
+      properties:
+        total_chapters:
+          type: integer
+        completed_chapters:
+          type: integer
+        in_progress_chapters:
+          type: integer
+        not_started_chapters:
+          type: integer
+        overall_completion_percentage:
+          type: number
+          format: double
+      required:
+      - completed_chapters
+      - in_progress_chapters
+      - not_started_chapters
+      - overall_completion_percentage
+      - total_chapters
+    ChapterProgressTopic:
+      type: object
+      properties:
+        topic_id:
+          type: integer
+        topic_name:
+          type: string
+        level:
+          type: string
+        mastery_score:
+          type: number
+          format: double
+        percentage:
+          type: number
+          format: double
+        attempt_count:
+          type: integer
+      required:
+      - attempt_count
+      - level
+      - mastery_score
+      - percentage
+      - topic_id
+      - topic_name
+    ContinueLearning:
+      type: object
+      properties:
+        topic_id:
+          type: integer
+        topic_name:
+          type: string
+        chapter_id:
+          type: integer
+        chapter_name:
+          type: string
+        subject_id:
+          type: integer
+        subject_name:
+          type: string
+        level:
+          type: string
+        mastery_score:
+          type: number
+          format: double
+        status:
+          type: string
+        action:
+          type: string
+      required:
+      - action
+      - chapter_id
+      - chapter_name
+      - level
+      - mastery_score
+      - status
+      - subject_id
+      - subject_name
+      - topic_id
+      - topic_name
+    DashboardOverview:
+      type: object
+      properties:
+        total_topics:
+          type: integer
+        completed_topics:
+          type: integer
+        available_topics:
+          type: integer
+        locked_topics:
+          type: integer
+        topic_completion_percentage:
+          type: number
+          format: double
+        total_chapters:
+          type: integer
+        completed_chapters:
+          type: integer
+        in_progress_chapters:
+          type: integer
+        chapter_completion_percentage:
+          type: number
+          format: double
+      required:
+      - available_topics
+      - chapter_completion_percentage
+      - completed_chapters
+      - completed_topics
+      - in_progress_chapters
+      - locked_topics
+      - topic_completion_percentage
+      - total_chapters
+      - total_topics
+    DashboardResponse:
+      type: object
+      properties:
+        student:
+          $ref: '#/components/schemas/DashboardStudent'
+        status:
+          type: string
+        overview:
+          $ref: '#/components/schemas/DashboardOverview'
+        continue_learning:
+          allOf:
+          - $ref: '#/components/schemas/ContinueLearning'
+          nullable: true
+        recommendations:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        chapters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterProgressItem'
+        recent_activity:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecentActivity'
+      required:
+      - chapters
+      - continue_learning
+      - overview
+      - recent_activity
+      - recommendations
+      - status
+      - student
+    DashboardStudent:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        grade:
+          type: string
+          nullable: true
+        school:
+          type: string
+        preferred_language:
+          type: string
+      required:
+      - email
+      - grade
+      - preferred_language
+      - school
+      - username
+    DifficultyEnum:
+      enum:
+      - 1
+      - 2
+      - 3
+      type: integer
+      description: |-
+        * `1` - Easy
+        * `2` - Medium
+        * `3` - Hard
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    Grade:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 50
+        level:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        description:
+          type: string
+        academic_year:
+          type: integer
+          nullable: true
+      required:
+      - id
+      - name
+    LearningContent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        explanation:
+          type: string
+          description: Simple explanation of the topic.
+        key_concepts:
+          type: string
+          description: Important ideas the student should remember.
+        easy_method:
+          type: string
+          description: Simple step-by-step method for solving problems.
+        worked_example:
+          type: string
+          description: A worked example with the solution.
+        common_mistakes:
+          type: string
+          description: Common mistakes students should avoid.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        topic:
+          type: integer
+      required:
+      - created_at
+      - explanation
+      - id
+      - topic
+      - updated_at
+    LearningPathResponse:
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/LearningPathSummary'
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/LearningPathTopic'
+      required:
+      - summary
+      - topics
+    LearningPathSummary:
+      type: object
+      properties:
+        total_topics:
+          type: integer
+        completed:
+          type: integer
+        available:
+          type: integer
+        locked:
+          type: integer
+        completion_percentage:
+          type: number
+          format: double
+      required:
+      - available
+      - completed
+      - completion_percentage
+      - locked
+      - total_topics
+    LearningPathTopic:
+      type: object
+      properties:
+        topic_id:
+          type: integer
+        topic_name:
+          type: string
+        chapter_id:
+          type: integer
+        chapter_name:
+          type: string
+        subject_id:
+          type: integer
+        subject_name:
+          type: string
+        status:
+          type: string
+        unlocked:
+          type: boolean
+        level:
+          type: string
+        mastery_score:
+          type: number
+          format: double
+        percentage:
+          type: number
+          format: double
+        previous_topic:
+          allOf:
+          - $ref: '#/components/schemas/PreviousTopic'
+          nullable: true
+      required:
+      - chapter_id
+      - chapter_name
+      - level
+      - mastery_score
+      - percentage
+      - previous_topic
+      - status
+      - subject_id
+      - subject_name
+      - topic_id
+      - topic_name
+      - unlocked
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - password
+      - username
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        pdf_file:
+          type: string
+          format: uri
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+        chapter:
+          type: integer
+      required:
+      - chapter
+      - id
+      - pdf_file
+      - title
+      - uploaded_at
+    OfflineAnswerRequest:
+      type: object
+      properties:
+        question:
+          type: integer
+          minimum: 1
+        answer:
+          $ref: '#/components/schemas/AnswerEnum'
+      required:
+      - answer
+      - question
+    OfflineAttemptResult:
+      type: object
+      properties:
+        attempt_id:
+          type: integer
+        quiz_id:
+          type: integer
+        topic_id:
+          type: integer
+        topic_name:
+          type: string
+        score:
+          type: integer
+        total_questions:
+          type: integer
+        percentage:
+          type: number
+          format: double
+      required:
+      - attempt_id
+      - percentage
+      - quiz_id
+      - score
+      - topic_id
+      - topic_name
+      - total_questions
+    OfflineBatchResult:
+      type: object
+      properties:
+        index:
+          type: integer
+        status_code:
+          type: integer
+        sync_id:
+          type: string
+          format: uuid
+        client_attempt_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        already_synced:
+          type: boolean
+        device_id:
+          type: string
+        received_at:
+          type: string
+          format: date-time
+        synced_at:
+          type: string
+          format: date-time
+          nullable: true
+        attempt:
+          $ref: '#/components/schemas/OfflineAttemptResult'
+        mastery:
+          $ref: '#/components/schemas/AdaptiveMastery'
+        error:
+          type: string
+      required:
+      - index
+      - status_code
+    OfflineBatchSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+        synced:
+          type: integer
+        already_synced:
+          type: integer
+        failed:
+          type: integer
+      required:
+      - already_synced
+      - failed
+      - synced
+      - total
+    OfflineBatchSyncRequest:
+      type: object
+      properties:
+        attempts:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfflineQuizAttemptRequest'
+      required:
+      - attempts
+    OfflineBatchSyncResponse:
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/OfflineBatchSummary'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfflineBatchResult'
+      required:
+      - results
+      - summary
+    OfflineQuizAttemptRequest:
+      type: object
+      properties:
+        client_attempt_id:
+          type: string
+          format: uuid
+        quiz_id:
+          type: integer
+          minimum: 1
+        device_id:
+          type: string
+          maxLength: 200
+        client_created_at:
+          type: string
+          format: date-time
+          nullable: true
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfflineAnswerRequest'
+      required:
+      - answers
+      - client_attempt_id
+      - quiz_id
+    OfflineStatusRecord:
+      type: object
+      properties:
+        sync_id:
+          type: string
+          format: uuid
+        client_attempt_id:
+          type: string
+          format: uuid
+        device_id:
+          type: string
+        status:
+          type: string
+        client_created_at:
+          type: string
+          format: date-time
+          nullable: true
+        received_at:
+          type: string
+          format: date-time
+        synced_at:
+          type: string
+          format: date-time
+          nullable: true
+        error_message:
+          type: string
+        attempt_id:
+          type: integer
+          nullable: true
+        quiz_id:
+          type: integer
+          nullable: true
+        topic_id:
+          type: integer
+          nullable: true
+        topic_name:
+          type: string
+          nullable: true
+      required:
+      - attempt_id
+      - client_attempt_id
+      - client_created_at
+      - device_id
+      - error_message
+      - quiz_id
+      - received_at
+      - status
+      - sync_id
+      - synced_at
+      - topic_id
+      - topic_name
+    OfflineStatusSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+        pending:
+          type: integer
+        synced:
+          type: integer
+        failed:
+          type: integer
+      required:
+      - failed
+      - pending
+      - synced
+      - total
+    OfflineSyncErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        sync_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+      required:
+      - error
+    OfflineSyncStatusResponse:
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/OfflineStatusSummary'
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfflineStatusRecord'
+      required:
+      - records
+      - summary
+    OfflineSyncSuccessResponse:
+      type: object
+      properties:
+        sync_id:
+          type: string
+          format: uuid
+        client_attempt_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        already_synced:
+          type: boolean
+        device_id:
+          type: string
+        received_at:
+          type: string
+          format: date-time
+        synced_at:
+          type: string
+          format: date-time
+          nullable: true
+        attempt:
+          $ref: '#/components/schemas/OfflineAttemptResult'
+        mastery:
+          $ref: '#/components/schemas/AdaptiveMastery'
+      required:
+      - already_synced
+      - attempt
+      - client_attempt_id
+      - device_id
+      - mastery
+      - received_at
+      - status
+      - sync_id
+      - synced_at
+    PreviousTopic:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        level:
+          type: string
+        mastery_score:
+          type: number
+          format: double
+      required:
+      - id
+      - level
+      - mastery_score
+      - name
+    ProgressErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    Question:
+      type: object
+      description: |-
+        Student-facing question serializer.
+
+        correct_answer is intentionally excluded.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        question_text:
+          type: string
+        option_a:
+          type: string
+          maxLength: 300
+        option_b:
+          type: string
+          maxLength: 300
+        option_c:
+          type: string
+          maxLength: 300
+        option_d:
+          type: string
+          maxLength: 300
+        difficulty:
+          allOf:
+          - $ref: '#/components/schemas/DifficultyEnum'
+          minimum: -9223372036854775808
+          maximum: 9223372036854775807
+        quiz:
+          type: integer
+      required:
+      - id
+      - option_a
+      - option_b
+      - option_c
+      - option_d
+      - question_text
+      - quiz
+    Quiz:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        topic:
+          type: integer
+      required:
+      - id
+      - title
+      - topic
+    QuizAttemptAnswerResult:
+      type: object
+      properties:
+        question:
+          type: integer
+        question_text:
+          type: string
+        student_answer:
+          type: string
+        correct_answer:
+          type: string
+        correct:
+          type: boolean
+      required:
+      - correct
+      - correct_answer
+      - question
+      - question_text
+      - student_answer
+    QuizAttemptResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        student:
+          type: string
+        quiz:
+          type: string
+        topic:
+          type: string
+        score:
+          type: integer
+        total_questions:
+          type: integer
+        percentage:
+          type: number
+          format: double
+        attempted_at:
+          type: string
+          format: date-time
+        synced:
+          type: boolean
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuizAttemptAnswerResult'
+      required:
+      - answers
+      - attempted_at
+      - id
+      - percentage
+      - quiz
+      - score
+      - student
+      - synced
+      - topic
+      - total_questions
+    QuizErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    RecentActivity:
+      type: object
+      properties:
+        attempt_id:
+          type: integer
+        quiz_id:
+          type: integer
+        quiz_title:
+          type: string
+        topic_id:
+          type: integer
+        topic_name:
+          type: string
+        chapter_id:
+          type: integer
+        chapter_name:
+          type: string
+        subject_id:
+          type: integer
+        subject_name:
+          type: string
+        score:
+          type: integer
+        total_questions:
+          type: integer
+        percentage:
+          type: number
+          format: double
+        attempted_at:
+          type: string
+          format: date-time
+      required:
+      - attempt_id
+      - attempted_at
+      - chapter_id
+      - chapter_name
+      - percentage
+      - quiz_id
+      - quiz_title
+      - score
+      - subject_id
+      - subject_name
+      - topic_id
+      - topic_name
+      - total_questions
+    StudentLoginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+        student:
+          $ref: '#/components/schemas/StudentProfile'
+      required:
+      - message
+      - student
+      - token
+    StudentProfile:
+      type: object
+      properties:
+        username:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        grade:
+          type: integer
+          nullable: true
+        school:
+          type: string
+          maxLength: 200
+        preferred_language:
+          type: string
+          maxLength: 50
+      required:
+      - email
+      - school
+      - username
+    StudentRegister:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        school:
+          type: string
+          maxLength: 200
+        preferred_language:
+          type: string
+          maxLength: 50
+      required:
+      - password
+      - school
+      - username
+    StudentRegisterResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+        student:
+          $ref: '#/components/schemas/StudentProfile'
+      required:
+      - message
+      - student
+      - token
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        language:
+          type: string
+          maxLength: 50
+        grade:
+          type: integer
+          nullable: true
+      required:
+      - id
+      - name
+    SubmitQuizAnswer:
+      type: object
+      properties:
+        question:
+          type: integer
+          minimum: 1
+        answer:
+          $ref: '#/components/schemas/AnswerEnum'
+      required:
+      - answer
+      - question
+    SubmitQuizRequest:
+      type: object
+      properties:
+        quiz:
+          type: integer
+          minimum: 1
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubmitQuizAnswer'
+      required:
+      - answers
+      - quiz
+    SubmitQuizResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        attempt_id:
+          type: integer
+      required:
+      - attempt_id
+      - message
+    TeacherDashboardOverview:
+      type: object
+      properties:
+        total_students:
+          type: integer
+        active_students:
+          type: integer
+        completed_students:
+          type: integer
+        students_needing_help:
+          type: integer
+        total_quiz_attempts:
+          type: integer
+        average_completion_percentage:
+          type: number
+          format: double
+        average_quiz_accuracy:
+          type: number
+          format: double
+      required:
+      - active_students
+      - average_completion_percentage
+      - average_quiz_accuracy
+      - completed_students
+      - students_needing_help
+      - total_quiz_attempts
+      - total_students
+    TeacherDashboardResponse:
+      type: object
+      properties:
+        teacher:
+          $ref: '#/components/schemas/TeacherDashboardTeacher'
+        overview:
+          $ref: '#/components/schemas/TeacherDashboardOverview'
+        students:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherStudentSummary'
+      required:
+      - overview
+      - students
+      - teacher
+    TeacherDashboardTeacher:
+      type: object
+      properties:
+        teacher_id:
+          type: integer
+        username:
+          type: string
+        email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        school:
+          type: string
+      required:
+      - email
+      - school
+      - teacher_id
+      - username
+    TeacherLoginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+        teacher:
+          $ref: '#/components/schemas/TeacherProfile'
+      required:
+      - message
+      - teacher
+      - token
+    TeacherProfile:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        school:
+          type: string
+      required:
+      - email
+      - school
+      - username
+    TeacherRecentAttempt:
+      type: object
+      properties:
+        attempt_id:
+          type: integer
+        student_id:
+          type: integer
+        username:
+          type: string
+        quiz_id:
+          type: integer
+        quiz_title:
+          type: string
+        topic_id:
+          type: integer
+        topic_name:
+          type: string
+        chapter_id:
+          type: integer
+        chapter_name:
+          type: string
+        subject_id:
+          type: integer
+        subject_name:
+          type: string
+        score:
+          type: integer
+        total_questions:
+          type: integer
+        percentage:
+          type: number
+          format: double
+        attempted_at:
+          type: string
+          format: date-time
+      required:
+      - attempt_id
+      - attempted_at
+      - chapter_id
+      - chapter_name
+      - percentage
+      - quiz_id
+      - quiz_title
+      - score
+      - student_id
+      - subject_id
+      - subject_name
+      - topic_id
+      - topic_name
+      - total_questions
+      - username
+    TeacherRecentAttemptsResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        attempts:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherRecentAttempt'
+      required:
+      - attempts
+      - count
+    TeacherStudentProgressResponse:
+      type: object
+      properties:
+        student:
+          type: object
+          additionalProperties: {}
+        status:
+          type: string
+        overview:
+          type: object
+          additionalProperties: {}
+        continue_learning:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        recommendations:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        chapters:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        recent_activity:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - chapters
+      - continue_learning
+      - overview
+      - recent_activity
+      - recommendations
+      - status
+      - student
+    TeacherStudentSummary:
+      type: object
+      properties:
+        student_id:
+          type: integer
+        username:
+          type: string
+        email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        grade:
+          type: string
+          nullable: true
+        school:
+          type: string
+        preferred_language:
+          type: string
+        total_topics:
+          type: integer
+        completed_topics:
+          type: integer
+        available_topics:
+          type: integer
+        locked_topics:
+          type: integer
+        completion_percentage:
+          type: number
+          format: double
+        quiz_attempts:
+          type: integer
+        quiz_accuracy:
+          type: number
+          format: double
+      required:
+      - available_topics
+      - completed_topics
+      - completion_percentage
+      - email
+      - grade
+      - locked_topics
+      - preferred_language
+      - quiz_accuracy
+      - quiz_attempts
+      - school
+      - student_id
+      - total_topics
+      - username
+    TeacherStudentsResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        students:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherStudentSummary'
+      required:
+      - count
+      - students
+    TeacherWeakTopicsResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        weak_topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeakTopic'
+      required:
+      - count
+      - weak_topics
+    Topic:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        difficulty:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        chapter:
+          type: integer
+      required:
+      - chapter
+      - id
+      - name
+    TopicPerformance:
+      type: object
+      properties:
+        topic_id:
+          type: integer
+        topic_name:
+          type: string
+        students:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicPerformanceStudent'
+      required:
+      - students
+      - topic_id
+      - topic_name
+    TopicPerformanceStudent:
+      type: object
+      properties:
+        student_id:
+          type: integer
+        student_username:
+          type: string
+        correct:
+          type: integer
+        total:
+          type: integer
+        attempt_count:
+          type: integer
+        percentage:
+          type: number
+          format: double
+      required:
+      - attempt_count
+      - correct
+      - percentage
+      - student_id
+      - student_username
+      - total
+    WeakTopic:
+      type: object
+      properties:
+        topic_id:
+          type: integer
+        topic_name:
+          type: string
+        chapter_id:
+          type: integer
+        chapter_name:
+          type: string
+        subject_id:
+          type: integer
+        subject_name:
+          type: string
+        weak_students:
+          type: integer
+        developing_students:
+          type: integer
+        student_count:
+          type: integer
+        attempt_count:
+          type: integer
+        average_mastery:
+          type: number
+          format: double
+        students:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeakTopicStudent'
+      required:
+      - attempt_count
+      - average_mastery
+      - chapter_id
+      - chapter_name
+      - developing_students
+      - student_count
+      - students
+      - subject_id
+      - subject_name
+      - topic_id
+      - topic_name
+      - weak_students
+    WeakTopicStudent:
+      type: object
+      properties:
+        student_id:
+          type: integer
+        username:
+          type: string
+        level:
+          type: string
+        mastery_score:
+          type: number
+          format: double
+        attempt_count:
+          type: integer
+      required:
+      - attempt_count
+      - level
+      - mastery_score
+      - student_id
+      - username
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

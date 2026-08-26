@@ -1,3 +1,5 @@
+from drf_spectacular.utils import extend_schema
+
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -7,18 +9,58 @@ from users.models import Student
 
 from .learning_path import build_learning_path
 
+from .serializers import (
+    LearningPathResponseSerializer,
+    ProgressErrorResponseSerializer,
+)
+
 
 class MyLearningPathView(APIView):
+
     permission_classes = [
         IsAuthenticated
     ]
 
-    def get(self, request):
+    @extend_schema(
+        tags=[
+            "Progress"
+        ],
+
+        summary=(
+            "Get student learning path"
+        ),
+
+        description=(
+            "Return the authenticated student's "
+            "ordered learning path including "
+            "available, completed and locked topics."
+        ),
+
+        responses={
+            200: (
+                LearningPathResponseSerializer
+            ),
+
+            400: (
+                ProgressErrorResponseSerializer
+            ),
+
+            403: (
+                ProgressErrorResponseSerializer
+            ),
+        },
+    )
+    def get(
+        self,
+        request,
+    ):
 
         try:
+
             student = request.user.student
 
         except Student.DoesNotExist:
+
             return Response(
                 {
                     "error": (
@@ -26,10 +68,13 @@ class MyLearningPathView(APIView):
                         "the learning path."
                     )
                 },
-                status=status.HTTP_403_FORBIDDEN,
+                status=(
+                    status.HTTP_403_FORBIDDEN
+                ),
             )
 
         if not student.grade:
+
             return Response(
                 {
                     "error": (
@@ -37,7 +82,9 @@ class MyLearningPathView(APIView):
                         "a grade assigned."
                     )
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=(
+                    status.HTTP_400_BAD_REQUEST
+                ),
             )
 
         data = build_learning_path(
@@ -46,5 +93,7 @@ class MyLearningPathView(APIView):
 
         return Response(
             data,
-            status=status.HTTP_200_OK,
+            status=(
+                status.HTTP_200_OK
+            ),
         )

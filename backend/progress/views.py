@@ -1,5 +1,8 @@
 from django.db import transaction
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
+
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -17,24 +20,92 @@ from .services import (
     build_student_topic_performance,
 )
 
+from .serializers import (
+    ProgressErrorResponseSerializer,
+    QuizAttemptResultSerializer,
+    SubmitQuizRequestSerializer,
+    SubmitQuizResponseSerializer,
+    TopicPerformanceSerializer,
+)
+
+
+# ============================================================
+# SUBMIT STANDARD QUIZ
+# ============================================================
 
 class SubmitQuizView(APIView):
-    permission_classes = [IsAuthenticated]
 
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    @extend_schema(
+        tags=[
+            "Progress"
+        ],
+        summary=(
+            "Submit standard quiz"
+        ),
+        description=(
+            "Submit answers for a standard quiz. "
+            "All questions in the quiz must "
+            "be answered."
+        ),
+        request=(
+            SubmitQuizRequestSerializer
+        ),
+        responses={
+            201: (
+                SubmitQuizResponseSerializer
+            ),
+            400: (
+                ProgressErrorResponseSerializer
+            ),
+            403: (
+                ProgressErrorResponseSerializer
+            ),
+            404: (
+                ProgressErrorResponseSerializer
+            ),
+        },
+    )
     @transaction.atomic
     def post(self, request):
-        quiz_id = request.data.get("quiz")
-        answers = request.data.get("answers")
+
+        quiz_id = request.data.get(
+            "quiz"
+        )
+
+        answers = request.data.get(
+            "answers"
+        )
+
+        # -----------------------------------------------------
+        # QUIZ ID
+        # -----------------------------------------------------
 
         if not quiz_id:
+
             return Response(
                 {
-                    "error": "Quiz is required."
+                    "error": (
+                        "Quiz is required."
+                    )
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=(
+                    status.HTTP_400_BAD_REQUEST
+                ),
             )
 
-        if not isinstance(answers, list):
+        # -----------------------------------------------------
+        # ANSWERS
+        # -----------------------------------------------------
+
+        if not isinstance(
+            answers,
+            list,
+        ):
+
             return Response(
                 {
                     "error": (
@@ -42,28 +113,52 @@ class SubmitQuizView(APIView):
                         "as a list."
                     )
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=(
+                    status.HTTP_400_BAD_REQUEST
+                ),
             )
 
+        # -----------------------------------------------------
+        # FIND QUIZ
+        # -----------------------------------------------------
+
         try:
-            quiz = Quiz.objects.select_related(
-                "topic"
-            ).get(
-                id=quiz_id
+
+            quiz = (
+                Quiz.objects
+                .select_related(
+                    "topic"
+                )
+                .get(
+                    id=quiz_id
+                )
             )
 
         except Quiz.DoesNotExist:
+
             return Response(
                 {
-                    "error": "Quiz not found."
+                    "error": (
+                        "Quiz not found."
+                    )
                 },
-                status=status.HTTP_404_NOT_FOUND,
+                status=(
+                    status.HTTP_404_NOT_FOUND
+                ),
             )
 
+        # -----------------------------------------------------
+        # STUDENT
+        # -----------------------------------------------------
+
         try:
-            student = request.user.student
+
+            student = (
+                request.user.student
+            )
 
         except Student.DoesNotExist:
+
             return Response(
                 {
                     "error": (
@@ -71,16 +166,25 @@ class SubmitQuizView(APIView):
                         "submit quizzes."
                     )
                 },
-                status=status.HTTP_403_FORBIDDEN,
+                status=(
+                    status.HTTP_403_FORBIDDEN
+                ),
             )
+
+        # -----------------------------------------------------
+        # QUESTIONS
+        # -----------------------------------------------------
 
         questions = list(
             Question.objects.filter(
                 quiz=quiz
-            ).order_by("id")
+            ).order_by(
+                "id"
+            )
         )
 
         if not questions:
+
             return Response(
                 {
                     "error": (
@@ -88,18 +192,30 @@ class SubmitQuizView(APIView):
                         "any questions."
                     )
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=(
+                    status.HTTP_400_BAD_REQUEST
+                ),
             )
 
         question_map = {
             question.id: question
-            for question in questions
+            for question
+            in questions
         }
 
         answer_map = {}
 
+        # -----------------------------------------------------
+        # VALIDATE ANSWERS
+        # -----------------------------------------------------
+
         for item in answers:
-            if not isinstance(item, dict):
+
+            if not isinstance(
+                item,
+                dict,
+            ):
+
                 return Response(
                     {
                         "error": (
@@ -121,6 +237,7 @@ class SubmitQuizView(APIView):
             )
 
             if question_id is None:
+
                 return Response(
                     {
                         "error": (
@@ -134,6 +251,7 @@ class SubmitQuizView(APIView):
                 )
 
             try:
+
                 question_id = int(
                     question_id
                 )
@@ -142,6 +260,7 @@ class SubmitQuizView(APIView):
                 TypeError,
                 ValueError,
             ):
+
                 return Response(
                     {
                         "error": (
@@ -154,7 +273,12 @@ class SubmitQuizView(APIView):
                     ),
                 )
 
-            if question_id not in question_map:
+            if (
+                question_id
+                not in
+                question_map
+            ):
+
                 return Response(
                     {
                         "error": (
@@ -168,7 +292,12 @@ class SubmitQuizView(APIView):
                     ),
                 )
 
-            if question_id in answer_map:
+            if (
+                question_id
+                in
+                answer_map
+            ):
+
                 return Response(
                     {
                         "error": (
@@ -182,6 +311,7 @@ class SubmitQuizView(APIView):
                 )
 
             if selected_answer is None:
+
                 return Response(
                     {
                         "error": (
@@ -195,7 +325,9 @@ class SubmitQuizView(APIView):
                 )
 
             selected_answer = (
-                str(selected_answer)
+                str(
+                    selected_answer
+                )
                 .strip()
                 .upper()
             )
@@ -206,6 +338,7 @@ class SubmitQuizView(APIView):
                 "C",
                 "D",
             }:
+
                 return Response(
                     {
                         "error": (
@@ -222,7 +355,16 @@ class SubmitQuizView(APIView):
                 question_id
             ] = selected_answer
 
-        if len(answer_map) != len(questions):
+        # -----------------------------------------------------
+        # ALL QUESTIONS MUST BE ANSWERED
+        # -----------------------------------------------------
+
+        if (
+            len(answer_map)
+            !=
+            len(questions)
+        ):
+
             return Response(
                 {
                     "error": (
@@ -236,31 +378,51 @@ class SubmitQuizView(APIView):
                         len(answer_map)
                     ),
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=(
+                    status.HTTP_400_BAD_REQUEST
+                ),
             )
 
-        attempt = QuizAttempt.objects.create(
-            student=student,
-            quiz=quiz,
-            score=0,
-            total_questions=len(questions),
+        # -----------------------------------------------------
+        # CREATE ATTEMPT
+        # -----------------------------------------------------
+
+        attempt = (
+            QuizAttempt.objects.create(
+                student=student,
+                quiz=quiz,
+                score=0,
+                total_questions=(
+                    len(questions)
+                ),
+            )
         )
 
         correct_count = 0
 
         answer_objects = []
 
+        # -----------------------------------------------------
+        # SERVER-SIDE SCORING
+        # -----------------------------------------------------
+
         for question in questions:
-            selected_answer = answer_map[
-                question.id
-            ]
+
+            selected_answer = (
+                answer_map[
+                    question.id
+                ]
+            )
 
             is_correct = (
                 selected_answer
-                == question.correct_answer.upper()
+                ==
+                question.correct_answer
+                .upper()
             )
 
             if is_correct:
+
                 correct_count += 1
 
             answer_objects.append(
@@ -270,7 +432,9 @@ class SubmitQuizView(APIView):
                     selected_answer=(
                         selected_answer
                     ),
-                    is_correct=is_correct,
+                    is_correct=(
+                        is_correct
+                    ),
                 )
             )
 
@@ -278,31 +442,69 @@ class SubmitQuizView(APIView):
             answer_objects
         )
 
-        attempt.score = correct_count
+        attempt.score = (
+            correct_count
+        )
 
         attempt.save(
-            update_fields=["score"]
+            update_fields=[
+                "score"
+            ]
         )
 
         # Score/correct answers are intentionally
         # not returned here.
+
         return Response(
             {
                 "message": (
                     "Quiz submitted successfully."
                 ),
-                "attempt_id": attempt.id,
+                "attempt_id": (
+                    attempt.id
+                ),
             },
-            status=status.HTTP_201_CREATED,
+            status=(
+                status.HTTP_201_CREATED
+            ),
         )
 
 
+# ============================================================
+# QUIZ ATTEMPT RESULTS
+# ============================================================
+
 class QuizAttemptResultsView(APIView):
+
     permission_classes = [
         IsTeacherOrAdmin
     ]
 
+    @extend_schema(
+        tags=[
+            "Progress"
+        ],
+        summary=(
+            "Get quiz attempt results"
+        ),
+        description=(
+            "Return quiz attempts and detailed "
+            "answers. This endpoint is restricted "
+            "to teachers or administrators."
+        ),
+        responses={
+            200: (
+                QuizAttemptResultSerializer(
+                    many=True
+                )
+            ),
+            403: (
+                ProgressErrorResponseSerializer
+            ),
+        },
+    )
     def get(self, request):
+
         attempts = (
             QuizAttempt.objects
             .select_related(
@@ -313,31 +515,41 @@ class QuizAttemptResultsView(APIView):
             .prefetch_related(
                 "answers__question"
             )
-            .order_by("-attempted_at")
+            .order_by(
+                "-attempted_at"
+            )
         )
 
         results = []
 
         for attempt in attempts:
+
             answers = []
 
-            for answer in attempt.answers.all():
+            for answer in (
+                attempt.answers.all()
+            ):
+
                 answers.append(
                     {
                         "question": (
                             answer.question.id
                         ),
+
                         "question_text": (
                             answer.question
                             .question_text
                         ),
+
                         "student_answer": (
                             answer.selected_answer
                         ),
+
                         "correct_answer": (
                             answer.question
                             .correct_answer
                         ),
+
                         "correct": (
                             answer.is_correct
                         ),
@@ -347,7 +559,8 @@ class QuizAttemptResultsView(APIView):
             percentage = (
                 (
                     attempt.score
-                    / attempt.total_questions
+                    /
+                    attempt.total_questions
                 )
                 * 100
                 if attempt.total_questions > 0
@@ -356,46 +569,94 @@ class QuizAttemptResultsView(APIView):
 
             results.append(
                 {
-                    "id": attempt.id,
+                    "id": (
+                        attempt.id
+                    ),
+
                     "student": (
                         attempt.student
                         .user.username
                     ),
+
                     "quiz": (
                         attempt.quiz.title
                     ),
+
                     "topic": (
-                        attempt.quiz.topic.name
+                        attempt.quiz
+                        .topic.name
                     ),
+
                     "score": (
                         attempt.score
                     ),
+
                     "total_questions": (
                         attempt.total_questions
                     ),
+
                     "percentage": round(
                         percentage,
                         2,
                     ),
+
                     "attempted_at": (
                         attempt.attempted_at
                     ),
-                    "synced": attempt.synced,
-                    "answers": answers,
+
+                    "synced": (
+                        attempt.synced
+                    ),
+
+                    "answers": (
+                        answers
+                    ),
                 }
             )
 
         return Response(
-            results
+            results,
+            status=(
+                status.HTTP_200_OK
+            ),
         )
 
 
+# ============================================================
+# TEACHER TOPIC PERFORMANCE
+# ============================================================
+
 class TopicPerformanceView(APIView):
+
     permission_classes = [
         IsTeacherOrAdmin
     ]
 
+    @extend_schema(
+        tags=[
+            "Progress"
+        ],
+        summary=(
+            "Get topic performance analytics"
+        ),
+        description=(
+            "Return topic-level performance "
+            "statistics grouped by student. "
+            "Restricted to teachers or admins."
+        ),
+        responses={
+            200: (
+                TopicPerformanceSerializer(
+                    many=True
+                )
+            ),
+            403: (
+                ProgressErrorResponseSerializer
+            ),
+        },
+    )
     def get(self, request):
+
         attempts = (
             QuizAttempt.objects
             .select_related(
@@ -409,15 +670,37 @@ class TopicPerformanceView(APIView):
 
         performance = {}
 
+        # -----------------------------------------------------
+        # BUILD RAW PERFORMANCE
+        # -----------------------------------------------------
+
         for attempt in attempts:
-            topic = attempt.quiz.topic
 
-            topic_id = topic.id
+            topic = (
+                attempt.quiz.topic
+            )
 
-            if topic_id not in performance:
-                performance[topic_id] = {
-                    "topic_id": topic.id,
-                    "topic_name": topic.name,
+            topic_id = (
+                topic.id
+            )
+
+            if (
+                topic_id
+                not in
+                performance
+            ):
+
+                performance[
+                    topic_id
+                ] = {
+                    "topic_id": (
+                        topic.id
+                    ),
+
+                    "topic_name": (
+                        topic.name
+                    ),
+
                     "students": {},
                 }
 
@@ -425,25 +708,42 @@ class TopicPerformanceView(APIView):
                 attempt.student.id
             )
 
-            students = performance[
-                topic_id
-            ]["students"]
+            students = (
+                performance[
+                    topic_id
+                ]["students"]
+            )
 
-            if student_id not in students:
-                students[student_id] = {
-                    "student_id": student_id,
+            if (
+                student_id
+                not in
+                students
+            ):
+
+                students[
+                    student_id
+                ] = {
+                    "student_id": (
+                        student_id
+                    ),
+
                     "student_username": (
                         attempt.student
                         .user.username
                     ),
+
                     "correct": 0,
+
                     "total": 0,
+
                     "attempt_count": 0,
                 }
 
-            student_data = students[
-                student_id
-            ]
+            student_data = (
+                students[
+                    student_id
+                ]
+            )
 
             student_data[
                 "attempt_count"
@@ -452,18 +752,27 @@ class TopicPerformanceView(APIView):
             for answer in (
                 attempt.answers.all()
             ):
-                student_data["total"] += 1
+
+                student_data[
+                    "total"
+                ] += 1
 
                 if answer.is_correct:
+
                     student_data[
                         "correct"
                     ] += 1
+
+        # -----------------------------------------------------
+        # FINAL RESULT
+        # -----------------------------------------------------
 
         results = []
 
         for topic_data in (
             performance.values()
         ):
+
             students = []
 
             for student_data in (
@@ -471,16 +780,26 @@ class TopicPerformanceView(APIView):
                     "students"
                 ].values()
             ):
+
                 total = (
-                    student_data["total"]
+                    student_data[
+                        "total"
+                    ]
                 )
 
                 correct = (
-                    student_data["correct"]
+                    student_data[
+                        "correct"
+                    ]
                 )
 
                 percentage = (
-                    (correct / total) * 100
+                    (
+                        correct
+                        /
+                        total
+                    )
+                    * 100
                     if total > 0
                     else 0
                 )
@@ -492,18 +811,27 @@ class TopicPerformanceView(APIView):
                                 "student_id"
                             ]
                         ),
+
                         "student_username": (
                             student_data[
                                 "student_username"
                             ]
                         ),
-                        "correct": correct,
-                        "total": total,
+
+                        "correct": (
+                            correct
+                        ),
+
+                        "total": (
+                            total
+                        ),
+
                         "attempt_count": (
                             student_data[
                                 "attempt_count"
                             ]
                         ),
+
                         "percentage": round(
                             percentage,
                             2,
@@ -518,30 +846,67 @@ class TopicPerformanceView(APIView):
                             "topic_id"
                         ]
                     ),
+
                     "topic_name": (
                         topic_data[
                             "topic_name"
                         ]
                     ),
-                    "students": students,
+
+                    "students": (
+                        students
+                    ),
                 }
             )
 
         return Response(
-            results
+            results,
+            status=(
+                status.HTTP_200_OK
+            ),
         )
 
 
+# ============================================================
+# STUDENT TOPIC PERFORMANCE
+# ============================================================
+
 class MyTopicPerformanceView(APIView):
+
     permission_classes = [
         IsAuthenticated
     ]
 
+    @extend_schema(
+        tags=[
+            "Progress"
+        ],
+        summary=(
+            "Get my topic performance"
+        ),
+        description=(
+            "Return topic performance information "
+            "for the authenticated student."
+        ),
+        responses={
+            200: (
+                OpenApiTypes.OBJECT
+            ),
+            403: (
+                ProgressErrorResponseSerializer
+            ),
+        },
+    )
     def get(self, request):
+
         try:
-            student = request.user.student
+
+            student = (
+                request.user.student
+            )
 
         except Student.DoesNotExist:
+
             return Response(
                 {
                     "error": (
@@ -561,20 +926,57 @@ class MyTopicPerformanceView(APIView):
         )
 
         return Response(
-            results
+            results,
+            status=(
+                status.HTTP_200_OK
+            ),
         )
 
 
+# ============================================================
+# STUDENT RECOMMENDATIONS
+# ============================================================
+
 class MyRecommendationsView(APIView):
+
     permission_classes = [
         IsAuthenticated
     ]
 
+    @extend_schema(
+        tags=[
+            "Progress"
+        ],
+        summary=(
+            "Get learning recommendations"
+        ),
+        description=(
+            "Return personalized learning "
+            "recommendations based on the "
+            "authenticated student's topic mastery."
+        ),
+        responses={
+            200: (
+                OpenApiTypes.OBJECT
+            ),
+            400: (
+                ProgressErrorResponseSerializer
+            ),
+            403: (
+                ProgressErrorResponseSerializer
+            ),
+        },
+    )
     def get(self, request):
+
         try:
-            student = request.user.student
+
+            student = (
+                request.user.student
+            )
 
         except Student.DoesNotExist:
+
             return Response(
                 {
                     "error": (
@@ -588,6 +990,7 @@ class MyRecommendationsView(APIView):
             )
 
         if not student.grade:
+
             return Response(
                 {
                     "error": (
@@ -609,5 +1012,7 @@ class MyRecommendationsView(APIView):
 
         return Response(
             data,
-            status=status.HTTP_200_OK,
+            status=(
+                status.HTTP_200_OK
+            ),
         )

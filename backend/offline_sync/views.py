@@ -1,3 +1,7 @@
+from drf_spectacular.utils import (
+    extend_schema,
+)
+
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -6,8 +10,24 @@ from rest_framework.views import APIView
 from users.models import Student
 
 from .models import OfflineSyncRecord
-from .services import sync_offline_quiz_attempt
 
+from .serializers import (
+    OfflineBatchSyncRequestSerializer,
+    OfflineBatchSyncResponseSerializer,
+    OfflineQuizAttemptRequestSerializer,
+    OfflineSyncErrorResponseSerializer,
+    OfflineSyncStatusResponseSerializer,
+    OfflineSyncSuccessResponseSerializer,
+)
+
+from .services import (
+    sync_offline_quiz_attempt,
+)
+
+
+# ============================================================
+# STUDENT HELPER
+# ============================================================
 
 def get_student_for_user(user):
     """
@@ -22,6 +42,10 @@ def get_student_for_user(user):
         return None
 
 
+# ============================================================
+# SINGLE OFFLINE QUIZ ATTEMPT SYNC
+# ============================================================
+
 class OfflineQuizAttemptSyncView(APIView):
     """
     Synchronize one offline quiz attempt.
@@ -33,13 +57,64 @@ class OfflineQuizAttemptSyncView(APIView):
         IsAuthenticated
     ]
 
-    def post(self, request):
+    @extend_schema(
+        tags=[
+            "Offline Sync"
+        ],
+
+        summary=(
+            "Synchronize offline quiz attempt"
+        ),
+
+        description=(
+            "Upload one quiz attempt completed "
+            "while the student was offline. "
+            "The server validates the payload, "
+            "scores the answers, creates the "
+            "quiz attempt and recalculates "
+            "topic mastery. Reusing the same "
+            "client_attempt_id returns the "
+            "existing synchronized attempt "
+            "instead of creating a duplicate."
+        ),
+
+        request=(
+            OfflineQuizAttemptRequestSerializer
+        ),
+
+        responses={
+            200: (
+                OfflineSyncSuccessResponseSerializer
+            ),
+
+            201: (
+                OfflineSyncSuccessResponseSerializer
+            ),
+
+            400: (
+                OfflineSyncErrorResponseSerializer
+            ),
+
+            403: (
+                OfflineSyncErrorResponseSerializer
+            ),
+
+            404: (
+                OfflineSyncErrorResponseSerializer
+            ),
+        },
+    )
+    def post(
+        self,
+        request,
+    ):
 
         student = get_student_for_user(
             request.user
         )
 
         if student is None:
+
             return Response(
                 {
                     "error": (
@@ -47,7 +122,9 @@ class OfflineQuizAttemptSyncView(APIView):
                         "synchronize quiz attempts."
                     )
                 },
-                status=status.HTTP_403_FORBIDDEN,
+                status=(
+                    status.HTTP_403_FORBIDDEN
+                ),
             )
 
         data, response_status = (
@@ -63,10 +140,14 @@ class OfflineQuizAttemptSyncView(APIView):
         )
 
 
+# ============================================================
+# BATCH OFFLINE SYNC
+# ============================================================
+
 class OfflineBatchSyncView(APIView):
     """
-    Synchronize multiple offline quiz
-    attempts in one request.
+    Synchronize multiple offline quiz attempts
+    in one request.
 
     POST /api/sync/batch/
     """
@@ -77,13 +158,54 @@ class OfflineBatchSyncView(APIView):
 
     MAX_BATCH_SIZE = 50
 
-    def post(self, request):
+    @extend_schema(
+        tags=[
+            "Offline Sync"
+        ],
+
+        summary=(
+            "Synchronize multiple offline attempts"
+        ),
+
+        description=(
+            "Upload multiple offline quiz attempts "
+            "in a single request. A maximum of "
+            "50 attempts can be processed at once. "
+            "Each attempt is synchronized "
+            "independently and duplicate "
+            "client_attempt_id values are handled "
+            "idempotently."
+        ),
+
+        request=(
+            OfflineBatchSyncRequestSerializer
+        ),
+
+        responses={
+            200: (
+                OfflineBatchSyncResponseSerializer
+            ),
+
+            400: (
+                OfflineSyncErrorResponseSerializer
+            ),
+
+            403: (
+                OfflineSyncErrorResponseSerializer
+            ),
+        },
+    )
+    def post(
+        self,
+        request,
+    ):
 
         student = get_student_for_user(
             request.user
         )
 
         if student is None:
+
             return Response(
                 {
                     "error": (
@@ -91,7 +213,9 @@ class OfflineBatchSyncView(APIView):
                         "synchronize quiz attempts."
                     )
                 },
-                status=status.HTTP_403_FORBIDDEN,
+                status=(
+                    status.HTTP_403_FORBIDDEN
+                ),
             )
 
         attempts = request.data.get(
@@ -102,16 +226,20 @@ class OfflineBatchSyncView(APIView):
             attempts,
             list,
         ):
+
             return Response(
                 {
                     "error": (
                         "attempts must be a list."
                     )
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=(
+                    status.HTTP_400_BAD_REQUEST
+                ),
             )
 
         if len(attempts) == 0:
+
             return Response(
                 {
                     "error": (
@@ -119,7 +247,9 @@ class OfflineBatchSyncView(APIView):
                         "is required."
                     )
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=(
+                    status.HTTP_400_BAD_REQUEST
+                ),
             )
 
         if (
@@ -127,6 +257,7 @@ class OfflineBatchSyncView(APIView):
             >
             self.MAX_BATCH_SIZE
         ):
+
             return Response(
                 {
                     "error": (
@@ -135,7 +266,9 @@ class OfflineBatchSyncView(APIView):
                         "in one request."
                     )
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=(
+                    status.HTTP_400_BAD_REQUEST
+                ),
             )
 
         results = []
@@ -152,6 +285,7 @@ class OfflineBatchSyncView(APIView):
                 attempt_payload,
                 dict,
             ):
+
                 failed_count += 1
 
                 results.append(
@@ -187,7 +321,10 @@ class OfflineBatchSyncView(APIView):
 
             if (
                 response_status
-                in (200, 201)
+                in (
+                    200,
+                    201,
+                )
                 and
                 data.get("status")
                 == "synced"
@@ -199,15 +336,19 @@ class OfflineBatchSyncView(APIView):
                     "already_synced",
                     False,
                 ):
+
                     already_synced_count += 1
 
             else:
+
                 failed_count += 1
 
         return Response(
             {
                 "summary": {
-                    "total": len(attempts),
+                    "total": (
+                        len(attempts)
+                    ),
 
                     "synced": (
                         synced_count
@@ -224,9 +365,15 @@ class OfflineBatchSyncView(APIView):
 
                 "results": results,
             },
-            status=status.HTTP_200_OK,
+            status=(
+                status.HTTP_200_OK
+            ),
         )
 
+
+# ============================================================
+# OFFLINE SYNC STATUS
+# ============================================================
 
 class OfflineSyncStatusView(APIView):
     """
@@ -240,13 +387,43 @@ class OfflineSyncStatusView(APIView):
         IsAuthenticated
     ]
 
-    def get(self, request):
+    @extend_schema(
+        tags=[
+            "Offline Sync"
+        ],
+
+        summary=(
+            "Get offline synchronization status"
+        ),
+
+        description=(
+            "Return the authenticated student's "
+            "offline synchronization summary "
+            "and up to the 50 most recent "
+            "synchronization records."
+        ),
+
+        responses={
+            200: (
+                OfflineSyncStatusResponseSerializer
+            ),
+
+            403: (
+                OfflineSyncErrorResponseSerializer
+            ),
+        },
+    )
+    def get(
+        self,
+        request,
+    ):
 
         student = get_student_for_user(
             request.user
         )
 
         if student is None:
+
             return Response(
                 {
                     "error": (
@@ -254,7 +431,9 @@ class OfflineSyncStatusView(APIView):
                         "access sync status."
                     )
                 },
-                status=status.HTTP_403_FORBIDDEN,
+                status=(
+                    status.HTTP_403_FORBIDDEN
+                ),
             )
 
         records = (
@@ -366,8 +545,11 @@ class OfflineSyncStatusView(APIView):
             {
                 "summary": {
                     "total": total,
+
                     "pending": pending,
+
                     "synced": synced,
+
                     "failed": failed,
                 },
 
@@ -375,5 +557,7 @@ class OfflineSyncStatusView(APIView):
                     record_data
                 ),
             },
-            status=status.HTTP_200_OK,
+            status=(
+                status.HTTP_200_OK
+            ),
         )

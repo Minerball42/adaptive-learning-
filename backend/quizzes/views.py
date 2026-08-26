@@ -3,6 +3,14 @@ from datetime import timedelta
 
 from django.db import transaction
 from django.utils import timezone
+from drf_spectacular.types import (
+    OpenApiTypes,
+)
+
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+)
 
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -24,8 +32,12 @@ from .models import (
 )
 
 from .serializers import (
-    QuizSerializer,
+    AdaptiveQuizResponseSerializer,
+    AdaptiveQuizSubmitRequestSerializer,
+    AdaptiveQuizSubmitResponseSerializer,
     QuestionSerializer,
+    QuizErrorResponseSerializer,
+    QuizSerializer,
 )
 
 from .services import (
@@ -118,6 +130,61 @@ class AdaptiveQuizView(APIView):
 
     QUESTION_LIMIT = 3
     SESSION_MINUTES = 30
+    @extend_schema(
+        tags=[
+            "Adaptive Quiz"
+        ],
+
+        summary=(
+            "Create adaptive quiz session"
+        ),
+
+        description=(
+            "Create a new adaptive quiz session "
+            "for the authenticated student. "
+            "Question difficulty is selected "
+            "according to the student's current "
+            "topic mastery."
+        ),
+
+        parameters=[
+            OpenApiParameter(
+                name="topic",
+
+                type=OpenApiTypes.INT,
+
+                location=(
+                    OpenApiParameter.QUERY
+                ),
+
+                required=True,
+
+                description=(
+                    "ID of the topic for which "
+                    "an adaptive quiz should "
+                    "be generated."
+                ),
+            ),
+        ],
+
+        responses={
+            200: (
+                AdaptiveQuizResponseSerializer
+            ),
+
+            400: (
+                QuizErrorResponseSerializer
+            ),
+
+            403: (
+                QuizErrorResponseSerializer
+            ),
+
+            404: (
+                QuizErrorResponseSerializer
+            ),
+        },
+    )
 
     def get(self, request):
 
@@ -446,9 +513,52 @@ class AdaptiveQuizSubmitView(APIView):
     permission_classes = [
         IsAuthenticated
     ]
+    
+    @extend_schema(
+        tags=[
+            "Adaptive Quiz"
+        ],
 
+        summary=(
+            "Submit adaptive quiz session"
+        ),
+
+        description=(
+            "Submit answers for an active "
+            "adaptive quiz session. "
+            "The server validates the exact "
+            "questions assigned to the session, "
+            "scores the attempt, recalculates "
+            "mastery, and selects the next "
+            "adaptive difficulty."
+        ),
+
+        request=(
+            AdaptiveQuizSubmitRequestSerializer
+        ),
+
+        responses={
+            201: (
+                AdaptiveQuizSubmitResponseSerializer
+            ),
+
+            400: (
+                QuizErrorResponseSerializer
+            ),
+
+            403: (
+                QuizErrorResponseSerializer
+            ),
+
+            404: (
+                QuizErrorResponseSerializer
+            ),
+        },
+    )
     @transaction.atomic
     def post(self, request):
+
+    
 
         # -----------------------------------------------------
         # STUDENT
