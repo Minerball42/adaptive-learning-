@@ -12,21 +12,25 @@ from courses.models import (
 
 
 class Command(BaseCommand):
-    help = "Seed Karnataka KSEAB SSLC Class 10 curriculum"
+    help = (
+        "Seed Karnataka KSEAB SSLC Class 10 "
+        "curriculum and subject structure"
+    )
 
     @transaction.atomic
     def handle(self, *args, **options):
+
         self.stdout.write(
             self.style.MIGRATE_HEADING(
-                "Setting up Karnataka SSLC curriculum..."
+                "Setting up KSEAB SSLC Class 10..."
             )
         )
 
-        # ---------------------------------------------------------
+        # =========================================================
         # 1. BOARD
-        # ---------------------------------------------------------
+        # =========================================================
 
-        board, board_created = Board.objects.update_or_create(
+        board, created = Board.objects.update_or_create(
             code="KSEAB",
             defaults={
                 "name": (
@@ -42,14 +46,14 @@ class Command(BaseCommand):
         self._print_status(
             "Board",
             board,
-            board_created,
+            created,
         )
 
-        # ---------------------------------------------------------
+        # =========================================================
         # 2. ACADEMIC YEAR
-        # ---------------------------------------------------------
+        # =========================================================
 
-        academic_year, year_created = (
+        academic_year, created = (
             AcademicYear.objects.update_or_create(
                 board=board,
                 name="2026-27",
@@ -62,21 +66,20 @@ class Command(BaseCommand):
         self._print_status(
             "Academic Year",
             academic_year,
-            year_created,
+            created,
         )
 
-        # ---------------------------------------------------------
+        # =========================================================
         # 3. GRADE
-        # ---------------------------------------------------------
+        # =========================================================
 
-        grade, grade_created = Grade.objects.update_or_create(
+        grade, created = Grade.objects.update_or_create(
             academic_year=academic_year,
             name="SSLC Class 10",
             defaults={
                 "level": 10,
                 "description": (
-                    "Karnataka State Board "
-                    "SSLC Class 10"
+                    "KSEAB Karnataka SSLC Class 10"
                 ),
             },
         )
@@ -84,43 +87,171 @@ class Command(BaseCommand):
         self._print_status(
             "Grade",
             grade,
-            grade_created,
+            created,
         )
 
-        # ---------------------------------------------------------
-        # 4. SUBJECTS
-        # ---------------------------------------------------------
+        # =========================================================
+        # 4. CORE SUBJECTS
+        # =========================================================
 
         mathematics = self._create_subject(
             grade=grade,
             name="Mathematics",
             description=(
-                "Karnataka SSLC Class 10 Mathematics"
+                "KSEAB SSLC Class 10 Mathematics"
             ),
             language="English",
+            subject_type="core",
+            is_optional=False,
+            display_order=1,
         )
 
         science = self._create_subject(
             grade=grade,
             name="Science",
             description=(
-                "Karnataka SSLC Class 10 Science"
+                "KSEAB SSLC Class 10 Science"
             ),
             language="English",
+            subject_type="core",
+            is_optional=False,
+            display_order=2,
         )
 
         social_science = self._create_subject(
             grade=grade,
             name="Social Science",
             description=(
-                "Karnataka SSLC Class 10 Social Science"
+                "KSEAB SSLC Class 10 Social Science"
             ),
             language="English",
+            subject_type="core",
+            is_optional=False,
+            display_order=3,
         )
 
-        # ---------------------------------------------------------
-        # 5. MATHEMATICS CHAPTERS
-        # ---------------------------------------------------------
+        # =========================================================
+        # 5. FIRST LANGUAGE SUBJECTS
+        # =========================================================
+
+        first_languages = [
+            "Kannada",
+            "English",
+            "Hindi",
+            "Sanskrit",
+            "Telugu",
+            "Tamil",
+            "Marathi",
+            "Urdu",
+        ]
+
+        for index, language_name in enumerate(
+            first_languages,
+            start=10,
+        ):
+            self._create_subject(
+                grade=grade,
+                name=language_name,
+                description=(
+                    f"KSEAB SSLC First Language "
+                    f"{language_name}"
+                ),
+                language=language_name,
+                subject_type="first_language",
+                is_optional=False,
+                display_order=index,
+            )
+
+        # =========================================================
+        # 6. SECOND LANGUAGE SUBJECTS
+        # =========================================================
+
+        second_languages = [
+            "Kannada",
+            "English",
+        ]
+
+        for index, language_name in enumerate(
+            second_languages,
+            start=30,
+        ):
+            self._create_subject(
+                grade=grade,
+                name=language_name,
+                description=(
+                    f"KSEAB SSLC Second Language "
+                    f"{language_name}"
+                ),
+                language=language_name,
+                subject_type="second_language",
+                is_optional=False,
+                display_order=index,
+            )
+
+        # =========================================================
+        # 7. THIRD LANGUAGE SUBJECTS
+        # =========================================================
+
+        third_languages = [
+            "Hindi",
+            "Kannada",
+            "English",
+            "Arabic",
+            "Urdu",
+            "Sanskrit",
+            "Konkani",
+            "Tulu",
+        ]
+
+        for index, language_name in enumerate(
+            third_languages,
+            start=40,
+        ):
+            self._create_subject(
+                grade=grade,
+                name=language_name,
+                description=(
+                    f"KSEAB SSLC Third Language "
+                    f"{language_name}"
+                ),
+                language=language_name,
+                subject_type="third_language",
+                is_optional=False,
+                display_order=index,
+            )
+
+        # =========================================================
+        # 8. NSQF / SKILL SUBJECTS
+        # =========================================================
+
+        skill_subjects = [
+            "Information Technology",
+            "Retail",
+            "Automobile",
+            "Beauty & Wellness",
+            "Electronics & Hardware",
+        ]
+
+        for index, subject_name in enumerate(
+            skill_subjects,
+            start=60,
+        ):
+            self._create_subject(
+                grade=grade,
+                name=subject_name,
+                description=(
+                    f"KSEAB SSLC NSQF / Skill Subject - "
+                    f"{subject_name}"
+                ),
+                language="English",
+                subject_type="optional",
+                is_optional=True,
+                display_order=index,
+            )
+
+        # =========================================================
+        # 9. MATHEMATICS CHAPTERS
+        # =========================================================
 
         mathematics_chapters = [
             (1, "Real Numbers"),
@@ -145,22 +276,21 @@ class Command(BaseCommand):
             (14, "Probability"),
         ]
 
-        maths_chapter_objects = {}
+        mathematics_objects = {}
 
-        for chapter_number, chapter_name in mathematics_chapters:
+        for number, name in mathematics_chapters:
+
             chapter = self._create_chapter(
                 subject=mathematics,
-                chapter_number=chapter_number,
-                name=chapter_name,
+                chapter_number=number,
+                name=name,
             )
 
-            maths_chapter_objects[
-                chapter_number
-            ] = chapter
+            mathematics_objects[number] = chapter
 
-        # ---------------------------------------------------------
-        # 6. SCIENCE CHAPTERS
-        # ---------------------------------------------------------
+        # =========================================================
+        # 10. SCIENCE CHAPTERS
+        # =========================================================
 
         science_chapters = [
             (
@@ -217,27 +347,198 @@ class Command(BaseCommand):
             ),
         ]
 
-        for chapter_number, chapter_name in science_chapters:
+        for number, name in science_chapters:
+
             self._create_chapter(
                 subject=science,
-                chapter_number=chapter_number,
-                name=chapter_name,
+                chapter_number=number,
+                name=name,
             )
 
-        # ---------------------------------------------------------
-        # 7. REAL NUMBERS TOPICS
-        # ---------------------------------------------------------
-        #
-        # We are initially building ONE complete chapter.
-        # Real Numbers will be our first adaptive-learning
-        # demonstration chapter.
-        # ---------------------------------------------------------
+        # =========================================================
+        # 11. SOCIAL SCIENCE CHAPTERS
+        # =========================================================
 
-        real_numbers = maths_chapter_objects[1]
+        social_science_chapters = [
+            # History
+            (
+                1,
+                "The Advent of Europeans to India",
+            ),
+            (
+                2,
+                "The Extension of the British Rule",
+            ),
+            (
+                3,
+                "The Impact of British Rule in India",
+            ),
+            (
+                4,
+                (
+                    "Opposition to British Rule in "
+                    "Karnataka and Wodiyars of Mysore"
+                ),
+            ),
+            (
+                5,
+                (
+                    "Social and Religious "
+                    "Reformation Movements"
+                ),
+            ),
+            (
+                6,
+                (
+                    "The First War of Indian "
+                    "Independence (1857)"
+                ),
+            ),
+            (
+                7,
+                "The Freedom Struggle",
+            ),
+            (
+                8,
+                "India After Independence",
+            ),
+            (
+                9,
+                "World Wars and India's Role",
+            ),
+
+            # Political Science
+            (
+                10,
+                "Public Administration - An Introduction",
+            ),
+            (
+                11,
+                "Challenges of India and Their Remedies",
+            ),
+            (
+                12,
+                (
+                    "India's Foreign Policy "
+                    "and Global Challenges"
+                ),
+            ),
+            (
+                13,
+                "World Organizations",
+            ),
+
+            # Sociology
+            (
+                14,
+                "Social Stratification",
+            ),
+            (
+                15,
+                "Work and Economic Life",
+            ),
+            (
+                16,
+                "Collective Behaviour and Protests",
+            ),
+            (
+                17,
+                "Social Challenges",
+            ),
+
+            # Geography
+            (
+                18,
+                (
+                    "India - Geographical Position "
+                    "and Physical Features"
+                ),
+            ),
+            (
+                19,
+                "India - Seasons",
+            ),
+            (
+                20,
+                "India - Soils",
+            ),
+            (
+                21,
+                "India - Forest Resources",
+            ),
+            (
+                22,
+                "India - Water Resources",
+            ),
+            (
+                23,
+                "India - Land Use and Agriculture",
+            ),
+            (
+                24,
+                "India - Mineral and Power Resources",
+            ),
+            (
+                25,
+                "India - Transport and Communication",
+            ),
+            (
+                26,
+                "India - Major Industries",
+            ),
+            (
+                27,
+                "India - Natural Disasters",
+            ),
+
+            # Economics
+            (
+                28,
+                "Economy and Government",
+            ),
+            (
+                29,
+                "Rural Development",
+            ),
+            (
+                30,
+                "Public Finance and Budget",
+            ),
+
+            # Business Studies
+            (
+                31,
+                "Bank Transactions",
+            ),
+            (
+                32,
+                "Entrepreneurship",
+            ),
+            (
+                33,
+                "Consumer Education and Protection",
+            ),
+        ]
+
+        for number, name in social_science_chapters:
+
+            self._create_chapter(
+                subject=social_science,
+                chapter_number=number,
+                name=name,
+            )
+
+        # =========================================================
+        # 12. REAL NUMBERS TOPICS
+        # =========================================================
+
+        real_numbers = mathematics_objects[1]
 
         real_number_topics = [
             {
-                "name": "Introduction to Real Numbers",
+                "name": (
+                    "Introduction to Real Numbers"
+                ),
                 "description": (
                     "Introduction and revision of "
                     "real-number concepts."
@@ -255,27 +556,32 @@ class Command(BaseCommand):
                 "difficulty": 2,
             },
             {
-                "name": "Revisiting Irrational Numbers",
+                "name": (
+                    "Revisiting Irrational Numbers"
+                ),
                 "description": (
-                    "Understanding and proving properties "
-                    "of irrational numbers."
+                    "Understanding and proving "
+                    "properties of irrational numbers."
                 ),
                 "difficulty": 2,
             },
         ]
 
         for topic_data in real_number_topics:
-            topic, created = Topic.objects.update_or_create(
-                chapter=real_numbers,
-                name=topic_data["name"],
-                defaults={
-                    "description": (
-                        topic_data["description"]
-                    ),
-                    "difficulty": (
-                        topic_data["difficulty"]
-                    ),
-                },
+
+            topic, created = (
+                Topic.objects.update_or_create(
+                    chapter=real_numbers,
+                    name=topic_data["name"],
+                    defaults={
+                        "description": (
+                            topic_data["description"]
+                        ),
+                        "difficulty": (
+                            topic_data["difficulty"]
+                        ),
+                    },
+                )
             )
 
             self._print_status(
@@ -284,24 +590,28 @@ class Command(BaseCommand):
                 created,
             )
 
-        # ---------------------------------------------------------
+        # =========================================================
         # SUMMARY
-        # ---------------------------------------------------------
+        # =========================================================
 
         self.stdout.write("")
+
         self.stdout.write(
             self.style.SUCCESS(
-                "KSEAB curriculum seeded successfully."
+                "KSEAB curriculum structure "
+                "seeded successfully."
             )
         )
 
         self.stdout.write("")
+
         self.stdout.write(
             f"Board: {board.name}"
         )
 
         self.stdout.write(
-            f"Academic Year: {academic_year.name}"
+            f"Academic Year: "
+            f"{academic_year.name}"
         )
 
         self.stdout.write(
@@ -309,7 +619,43 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(
-            f"Subjects: {grade.subjects.count()}"
+            f"Total Subjects: "
+            f"{grade.subjects.count()}"
+        )
+
+        self.stdout.write(
+            "Core Subjects: "
+            f"{grade.subjects.filter(
+                subject_type='core'
+            ).count()}"
+        )
+
+        self.stdout.write(
+            "First Languages: "
+            f"{grade.subjects.filter(
+                subject_type='first_language'
+            ).count()}"
+        )
+
+        self.stdout.write(
+            "Second Languages: "
+            f"{grade.subjects.filter(
+                subject_type='second_language'
+            ).count()}"
+        )
+
+        self.stdout.write(
+            "Third Languages: "
+            f"{grade.subjects.filter(
+                subject_type='third_language'
+            ).count()}"
+        )
+
+        self.stdout.write(
+            "Optional / Skill Subjects: "
+            f"{grade.subjects.filter(
+                subject_type='optional'
+            ).count()}"
         )
 
         self.stdout.write(
@@ -332,9 +678,9 @@ class Command(BaseCommand):
             f"{real_numbers.topics.count()}"
         )
 
-    # -------------------------------------------------------------
+    # =============================================================
     # HELPERS
-    # -------------------------------------------------------------
+    # =============================================================
 
     def _create_subject(
         self,
@@ -342,14 +688,23 @@ class Command(BaseCommand):
         name,
         description,
         language,
+        subject_type,
+        is_optional,
+        display_order,
     ):
-        subject, created = Subject.objects.update_or_create(
-            grade=grade,
-            name=name,
-            defaults={
-                "description": description,
-                "language": language,
-            },
+
+        subject, created = (
+            Subject.objects.update_or_create(
+                grade=grade,
+                name=name,
+                subject_type=subject_type,
+                language=language,
+                defaults={
+                    "description": description,
+                    "is_optional": is_optional,
+                    "display_order": display_order,
+                },
+            )
         )
 
         self._print_status(
@@ -366,13 +721,16 @@ class Command(BaseCommand):
         chapter_number,
         name,
     ):
-        chapter, created = Chapter.objects.update_or_create(
-            subject=subject,
-            chapter_number=chapter_number,
-            defaults={
-                "name": name,
-                "description": "",
-            },
+
+        chapter, created = (
+            Chapter.objects.update_or_create(
+                subject=subject,
+                chapter_number=chapter_number,
+                defaults={
+                    "name": name,
+                    "description": "",
+                },
+            )
         )
 
         self._print_status(
@@ -389,15 +747,24 @@ class Command(BaseCommand):
         obj,
         created,
     ):
+
         if created:
-            status = self.style.SUCCESS(
-                "CREATED"
+
+            object_status = (
+                self.style.SUCCESS(
+                    "CREATED"
+                )
             )
+
         else:
-            status = self.style.WARNING(
-                "UPDATED"
+
+            object_status = (
+                self.style.WARNING(
+                    "UPDATED"
+                )
             )
 
         self.stdout.write(
-            f"[{status}] {object_type}: {obj}"
+            f"[{object_status}] "
+            f"{object_type}: {obj}"
         )

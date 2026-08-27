@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Student
+from courses.models import Subject
 
+from .models import Student
 
 # ============================================================
 # STUDENT REGISTRATION
@@ -64,7 +65,20 @@ class StudentRegisterSerializer(serializers.ModelSerializer):
 
         return student
 
+class StudentSelectedSubjectSerializer(
+    serializers.ModelSerializer
+):
+    class Meta:
+        model = Subject
 
+        fields = [
+            "id",
+            "name",
+            "subject_type",
+            "language",
+            "is_optional",
+            "display_order",
+        ]
 # ============================================================
 # STUDENT PROFILE
 # ============================================================
@@ -83,6 +97,13 @@ class StudentProfileSerializer(
         read_only=True,
     )
 
+    selected_subjects = (
+        StudentSelectedSubjectSerializer(
+            many=True,
+            read_only=True,
+        )
+    )
+
     class Meta:
         model = Student
 
@@ -92,9 +113,128 @@ class StudentProfileSerializer(
             "grade",
             "school",
             "preferred_language",
+            "selected_subjects",
         ]
+class StudentSubjectSelectionRequestSerializer(
+    serializers.Serializer
+):
+    first_language = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        min_value=1,
+    )
+
+    second_language = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        min_value=1,
+    )
+
+    third_language = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        min_value=1,
+    )
+
+    optional_subjects = serializers.ListField(
+        child=serializers.IntegerField(
+            min_value=1
+        ),
+        required=False,
+        default=list,
+    )
 
 
+class StudentAvailableSubjectsResponseSerializer(
+    serializers.Serializer
+):
+    grade = serializers.DictField()
+
+    core_subjects = StudentSelectedSubjectSerializer(
+        many=True
+    )
+
+    first_languages = StudentSelectedSubjectSerializer(
+        many=True
+    )
+
+    second_languages = StudentSelectedSubjectSerializer(
+        many=True
+    )
+
+    third_languages = StudentSelectedSubjectSerializer(
+        many=True
+    )
+
+    optional_subjects = StudentSelectedSubjectSerializer(
+        many=True
+    )
+
+    selected_subjects = StudentSelectedSubjectSerializer(
+        many=True
+    )
+
+
+class StudentSubjectSelectionResponseSerializer(
+    serializers.Serializer
+):
+    message = serializers.CharField()
+
+    selected_subjects = StudentSelectedSubjectSerializer(
+        many=True
+    )
+class StudentAvailableSubjectsResponseSerializer(
+    serializers.Serializer
+):
+    grade = serializers.DictField()
+
+    core_subjects = (
+        StudentSelectedSubjectSerializer(
+            many=True
+        )
+    )
+
+    first_languages = (
+        StudentSelectedSubjectSerializer(
+            many=True
+        )
+    )
+
+    second_languages = (
+        StudentSelectedSubjectSerializer(
+            many=True
+        )
+    )
+
+    third_languages = (
+        StudentSelectedSubjectSerializer(
+            many=True
+        )
+    )
+
+    optional_subjects = (
+        StudentSelectedSubjectSerializer(
+            many=True
+        )
+    )
+
+    selected_subjects = (
+        StudentSelectedSubjectSerializer(
+            many=True
+        )
+    )
+
+
+class StudentSubjectSelectionResponseSerializer(
+    serializers.Serializer
+):
+    message = serializers.CharField()
+
+    selected_subjects = (
+        StudentSelectedSubjectSerializer(
+            many=True
+        )
+    )
 # ============================================================
 # SWAGGER / API DOCUMENTATION SERIALIZERS
 # ============================================================

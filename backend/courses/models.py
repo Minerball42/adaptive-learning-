@@ -102,8 +102,15 @@ class Grade(models.Model):
 
         return self.name
 
-
 class Subject(models.Model):
+    SUBJECT_TYPE_CHOICES = [
+        ("core", "Core Subject"),
+        ("first_language", "First Language"),
+        ("second_language", "Second Language"),
+        ("third_language", "Third Language"),
+        ("optional", "Optional / Skill Subject"),
+    ]
+
     grade = models.ForeignKey(
         Grade,
         on_delete=models.CASCADE,
@@ -112,6 +119,63 @@ class Subject(models.Model):
         blank=True
     )
 
+    name = models.CharField(
+        max_length=100
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    language = models.CharField(
+        max_length=50,
+        default="English",
+        help_text=(
+            "Language/medium used for this subject content."
+        )
+    )
+
+    subject_type = models.CharField(
+        max_length=30,
+        choices=SUBJECT_TYPE_CHOICES,
+        default="core"
+    )
+
+    is_optional = models.BooleanField(
+        default=False
+    )
+
+    display_order = models.PositiveSmallIntegerField(
+        default=1
+    )
+
+    class Meta:
+        ordering = [
+            "display_order",
+            "name"
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "grade",
+                    "name",
+                    "subject_type",
+                    "language"
+                ],
+                name="unique_subject_per_grade_type_language"
+            )
+        ]
+
+    def __str__(self):
+        if self.grade:
+            return (
+                f"{self.grade.name} - "
+                f"{self.name} "
+                f"({self.get_subject_type_display()})"
+            )
+
+        return self.name
     name = models.CharField(
         max_length=100
     )
