@@ -535,37 +535,33 @@ class Command(BaseCommand):
         real_numbers = mathematics_objects[1]
 
         real_number_topics = [
-            {
-                "name": (
-                    "Introduction to Real Numbers"
-                ),
-                "description": (
-                    "Introduction and revision of "
-                    "real-number concepts."
-                ),
-                "difficulty": 1,
-            },
-            {
-                "name": (
-                    "Fundamental Theorem of Arithmetic"
-                ),
-                "description": (
-                    "Prime factorisation and the "
-                    "Fundamental Theorem of Arithmetic."
-                ),
-                "difficulty": 2,
-            },
-            {
-                "name": (
-                    "Revisiting Irrational Numbers"
-                ),
-                "description": (
-                    "Understanding and proving "
-                    "properties of irrational numbers."
-                ),
-                "difficulty": 2,
-            },
-        ]
+    {
+        "name": "Introduction to Real Numbers",
+        "description": (
+            "Introduction and revision of "
+            "real-number concepts."
+        ),
+        "difficulty": 1,
+    },
+    {
+        "name": (
+            "Fundamental Theorem of Arithmetic"
+        ),
+        "description": (
+            "Prime factorisation and the "
+            "Fundamental Theorem of Arithmetic."
+        ),
+        "difficulty": 2,
+    },
+    {
+        "name": "Revisiting Irrational Numbers",
+        "description": (
+            "Understanding and proving properties "
+            "of irrational numbers."
+        ),
+        "difficulty": 2,
+    },
+]
 
         for topic_data in real_number_topics:
 
