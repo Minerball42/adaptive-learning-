@@ -360,166 +360,79 @@ class Command(BaseCommand):
         # =========================================================
 
         social_science_chapters = [
-            # History
-            (
-                1,
-                "The Advent of Europeans to India",
-            ),
-            (
-                2,
-                "The Extension of the British Rule",
-            ),
-            (
-                3,
-                "The Impact of British Rule in India",
-            ),
-            (
-                4,
-                (
-                    "Opposition to British Rule in "
-                    "Karnataka and Wodiyars of Mysore"
-                ),
-            ),
-            (
-                5,
-                (
-                    "Social and Religious "
-                    "Reformation Movements"
-                ),
-            ),
-            (
-                6,
-                (
-                    "The First War of Indian "
-                    "Independence (1857)"
-                ),
-            ),
-            (
-                7,
-                "The Freedom Struggle",
-            ),
-            (
-                8,
-                "India After Independence",
-            ),
-            (
-                9,
-                "World Wars and India's Role",
-            ),
-
-            # Political Science
-            (
-                10,
-                "Public Administration - An Introduction",
-            ),
-            (
-                11,
-                "Challenges of India and Their Remedies",
-            ),
-            (
-                12,
-                (
-                    "India's Foreign Policy "
-                    "and Global Challenges"
-                ),
-            ),
-            (
-                13,
-                "World Organizations",
-            ),
-
-            # Sociology
-            (
-                14,
-                "Social Stratification",
-            ),
-            (
-                15,
-                "Work and Economic Life",
-            ),
-            (
-                16,
-                "Collective Behaviour and Protests",
-            ),
-            (
-                17,
-                "Social Challenges",
-            ),
-
-            # Geography
-            (
-                18,
-                (
-                    "India - Geographical Position "
-                    "and Physical Features"
-                ),
-            ),
-            (
-                19,
-                "India - Seasons",
-            ),
-            (
-                20,
-                "India - Soils",
-            ),
-            (
-                21,
-                "India - Forest Resources",
-            ),
-            (
-                22,
-                "India - Water Resources",
-            ),
-            (
-                23,
-                "India - Land Use and Agriculture",
-            ),
-            (
-                24,
-                "India - Mineral and Power Resources",
-            ),
-            (
-                25,
-                "India - Transport and Communication",
-            ),
-            (
-                26,
-                "India - Major Industries",
-            ),
-            (
-                27,
-                "India - Natural Disasters",
-            ),
-
-            # Economics
-            (
-                28,
-                "Economy and Government",
-            ),
-            (
-                29,
-                "Rural Development",
-            ),
-            (
-                30,
-                "Public Finance and Budget",
-            ),
-
-            # Business Studies
-            (
-                31,
-                "Bank Transactions",
-            ),
-            (
-                32,
-                "Entrepreneurship",
-            ),
-            (
-                33,
-                "Consumer Education and Protection",
-            ),
-        ]
-
+    (1, "The Advent of Europeans to India"),
+    (2, "The Extension of the British Rule"),
+    (3, "The Impact of British Rule in India"),
+    (
+        4,
+        "Opposition to British Rule in Karnataka "
+        "and Wodiyars of Mysore",
+    ),
+    (
+        5,
+        "Social and Religious Reformation Movements",
+    ),
+    (
+        6,
+        "Public Administration - An Introduction",
+    ),
+    (
+        7,
+        "Challenges of India and Their Remedies",
+    ),
+    (8, "Social Stratification"),
+    (9, "Work and Economic Life"),
+    (
+        10,
+        "India - Geographical Position "
+        "and Physical Features",
+    ),
+    (11, "India - Seasons"),
+    (12, "India - Soils"),
+    (13, "India - Forest Resources"),
+    (14, "India - Water Resources"),
+    (15, "Economy and Government"),
+    (16, "Bank Transactions"),
+    (
+        17,
+        "The First War of Indian Independence (1857)",
+    ),
+    (18, "The Freedom Struggle"),
+    (19, "India After Independence"),
+    (20, "World Wars and India's Role"),
+    (
+        21,
+        "India's Foreign Policy and "
+        "Global Challenges",
+    ),
+    (22, "World Organizations"),
+    (
+        23,
+        "Collective Behaviour and Protests",
+    ),
+    (24, "Social Challenges"),
+    (
+        25,
+        "India - Land Use and Agriculture",
+    ),
+    (
+        26,
+        "India - Mineral and Power Resources",
+    ),
+    (
+        27,
+        "India - Transport and Communication",
+    ),
+    (28, "India - Major Industries"),
+    (29, "India - Natural Disasters"),
+    (30, "Rural Development"),
+    (31, "Public Finance and Budget"),
+    (32, "Entrepreneurship"),
+    (
+        33,
+        "Consumer Education and Protection",
+    ),
+]
         for number, name in social_science_chapters:
 
             self._create_chapter(
