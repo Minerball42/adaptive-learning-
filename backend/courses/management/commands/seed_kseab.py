@@ -128,33 +128,36 @@ class Command(BaseCommand):
             subject_type="core",
             is_optional=False,
             display_order=3,
-        )
-
-        # =========================================================
+        )       
+                # =========================================================
         # 5. FIRST LANGUAGE SUBJECTS
         # =========================================================
 
         first_languages = [
-            "Kannada",
-            "English",
-            "Hindi",
-            "Sanskrit",
-            "Telugu",
-            "Tamil",
-            "Marathi",
-            "Urdu",
+            ("Kannada", "Kannada"),
+            ("Telugu", "Telugu"),
+            ("Hindi", "Hindi"),
+            ("Marathi", "Marathi"),
+            ("Tamil", "Tamil"),
+            ("Urdu", "Urdu"),
+            ("English", "English"),
+            ("English (NCERT)", "English"),
+            ("Sanskrit", "Sanskrit"),
         ]
 
-        for index, language_name in enumerate(
+        for index, (
+            subject_name,
+            language_name,
+        ) in enumerate(
             first_languages,
             start=10,
         ):
             self._create_subject(
                 grade=grade,
-                name=language_name,
+                name=subject_name,
                 description=(
                     f"KSEAB SSLC First Language "
-                    f"{language_name}"
+                    f"{subject_name}"
                 ),
                 language=language_name,
                 subject_type="first_language",
@@ -193,26 +196,31 @@ class Command(BaseCommand):
         # =========================================================
 
         third_languages = [
-            "Hindi",
-            "Kannada",
-            "English",
-            "Arabic",
-            "Urdu",
-            "Sanskrit",
-            "Konkani",
-            "Tulu",
+            ("Hindi (NCERT)", "Hindi"),
+            ("Hindi", "Hindi"),
+            ("Kannada", "Kannada"),
+            ("English", "English"),
+            ("Arabic", "Arabic"),
+            ("Urdu", "Urdu"),
+            ("Sanskrit", "Sanskrit"),
+            ("Konkani", "Konkani"),
+            ("Tulu", "Tulu"),
+            ("Marathi", "Marathi"),
         ]
 
-        for index, language_name in enumerate(
+        for index, (
+            subject_name,
+            language_name,
+        ) in enumerate(
             third_languages,
             start=40,
         ):
             self._create_subject(
                 grade=grade,
-                name=language_name,
+                name=subject_name,
                 description=(
                     f"KSEAB SSLC Third Language "
-                    f"{language_name}"
+                    f"{subject_name}"
                 ),
                 language=language_name,
                 subject_type="third_language",
@@ -225,12 +233,13 @@ class Command(BaseCommand):
         # =========================================================
 
         skill_subjects = [
-            "Information Technology",
-            "Retail",
-            "Automobile",
-            "Beauty & Wellness",
-            "Electronics & Hardware",
-        ]
+    "Information Technology",
+    "Retail",
+    "Automobile",
+    "Beauty & Wellness",
+    "Apparels, Madeups & Home Furnishing",
+    "Electronics & Hardware",
+]
 
         for index, subject_name in enumerate(
             skill_subjects,
