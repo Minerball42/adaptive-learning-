@@ -404,3 +404,58 @@ class DashboardResponseSerializer(
     recent_activity = RecentActivitySerializer(
         many=True
     )
+# ============================================================
+# SUBJECT PROGRESS
+# ============================================================
+
+
+class SubjectProgressItemSerializer(
+    serializers.Serializer
+):
+    subject_id = serializers.IntegerField()
+
+    subject_name = serializers.CharField()
+
+    subject_type = serializers.CharField()
+
+    subject_type_display = serializers.CharField()
+
+    language = serializers.CharField()
+
+    status = serializers.CharField()
+
+    total_chapters = serializers.IntegerField()
+
+    total_topics = serializers.IntegerField()
+
+    started_topics = serializers.IntegerField()
+
+    completed_topics = serializers.IntegerField()
+
+    remaining_topics = serializers.IntegerField()
+
+    completion_percentage = serializers.FloatField()
+
+    average_mastery = serializers.FloatField()
+
+
+class SubjectProgressSummarySerializer(
+    serializers.Serializer
+):
+    total_subjects = serializers.IntegerField()
+
+    completed_subjects = serializers.IntegerField()
+
+    in_progress_subjects = serializers.IntegerField()
+
+    not_started_subjects = serializers.IntegerField()
+
+
+class SubjectProgressResponseSerializer(
+    serializers.Serializer
+):
+    summary = SubjectProgressSummarySerializer()
+
+    subjects = SubjectProgressItemSerializer(
+        many=True
+    )

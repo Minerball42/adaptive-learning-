@@ -16,6 +16,10 @@ from .chapter_progress_views import (
     MyChapterProgressView,
 )
 
+from .subject_progress_views import (
+    MySubjectProgressView,
+)
+
 from .dashboard_views import (
     MyDashboardView,
 )
@@ -62,6 +66,12 @@ urlpatterns = [
         "chapter-progress/",
         MyChapterProgressView.as_view(),
         name="my-chapter-progress",
+    ),
+
+    path(
+        "subject-progress/",
+        MySubjectProgressView.as_view(),
+        name="my-subject-progress",
     ),
 
     path(
