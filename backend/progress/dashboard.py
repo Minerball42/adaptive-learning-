@@ -1,6 +1,7 @@
 from .access import get_allowed_subject_ids
 from .chapter_progress import build_chapter_progress
 from .learning_path import build_learning_path
+from .subject_progress import build_subject_progress
 from .services import build_student_recommendations
 from .models import QuizAttempt
 
@@ -19,12 +20,6 @@ def build_recent_activity(
 
     Only attempts from subjects currently available
     to the student are included.
-
-    Allowed subjects:
-
-    - Core subjects
-    - Selected language subjects
-    - Selected optional subjects
     """
 
     if (
@@ -42,7 +37,6 @@ def build_recent_activity(
     attempts = (
         QuizAttempt.objects.filter(
             student=student,
-
             quiz__topic__chapter__subject_id__in=(
                 allowed_subject_ids
             ),
@@ -60,10 +54,6 @@ def build_recent_activity(
     )
 
     results = []
-
-    # ========================================================
-    # PROCESS ATTEMPTS
-    # ========================================================
 
     for attempt in attempts:
 
@@ -180,57 +170,39 @@ def get_continue_learning(
 
             return {
                 "topic_id": (
-                    topic[
-                        "topic_id"
-                    ]
+                    topic["topic_id"]
                 ),
 
                 "topic_name": (
-                    topic[
-                        "topic_name"
-                    ]
+                    topic["topic_name"]
                 ),
 
                 "chapter_id": (
-                    topic[
-                        "chapter_id"
-                    ]
+                    topic["chapter_id"]
                 ),
 
                 "chapter_name": (
-                    topic[
-                        "chapter_name"
-                    ]
+                    topic["chapter_name"]
                 ),
 
                 "subject_id": (
-                    topic[
-                        "subject_id"
-                    ]
+                    topic["subject_id"]
                 ),
 
                 "subject_name": (
-                    topic[
-                        "subject_name"
-                    ]
+                    topic["subject_name"]
                 ),
 
                 "level": (
-                    topic[
-                        "level"
-                    ]
+                    topic["level"]
                 ),
 
                 "mastery_score": (
-                    topic[
-                        "mastery_score"
-                    ]
+                    topic["mastery_score"]
                 ),
 
                 "status": (
-                    topic[
-                        "status"
-                    ]
+                    topic["status"]
                 ),
 
                 "action": (
@@ -252,8 +224,15 @@ def build_dashboard(
     """
     Build the complete student dashboard.
 
-    Dashboard information is generated only from
-    subjects currently available to the student.
+    Includes:
+
+    - Student information
+    - Overall topic progress
+    - Subject progress
+    - Chapter progress
+    - Continue learning
+    - Recommendations
+    - Recent quiz activity
     """
 
     # ========================================================
@@ -262,6 +241,16 @@ def build_dashboard(
 
     learning_path = (
         build_learning_path(
+            student
+        )
+    )
+
+    # ========================================================
+    # SUBJECT PROGRESS
+    # ========================================================
+
+    subject_progress = (
+        build_subject_progress(
             student
         )
     )
@@ -390,13 +379,11 @@ def build_dashboard(
     ]
 
     top_recommendations = (
-        active_recommendations[
-            :3
-        ]
+        active_recommendations[:3]
     )
 
     # ========================================================
-    # DASHBOARD STATE
+    # DASHBOARD STATUS
     # ========================================================
 
     if (
@@ -530,6 +517,17 @@ def build_dashboard(
                 )
             ),
         },
+
+        # ----------------------------------------------------
+        # SUBJECT PROGRESS FOR FRONTEND CARDS
+        # ----------------------------------------------------
+
+        "subject_progress": (
+            subject_progress.get(
+                "subjects",
+                [],
+            )
+        ),
 
         "continue_learning": (
             continue_learning

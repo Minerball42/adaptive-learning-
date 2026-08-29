@@ -5,6 +5,7 @@ from rest_framework import serializers
 # COMMON ERROR
 # ============================================================
 
+
 class ProgressErrorResponseSerializer(
     serializers.Serializer
 ):
@@ -14,6 +15,7 @@ class ProgressErrorResponseSerializer(
 # ============================================================
 # NORMAL QUIZ SUBMISSION
 # ============================================================
+
 
 class SubmitQuizAnswerSerializer(
     serializers.Serializer
@@ -55,6 +57,7 @@ class SubmitQuizResponseSerializer(
 # ============================================================
 # QUIZ ATTEMPT RESULTS
 # ============================================================
+
 
 class QuizAttemptAnswerResultSerializer(
     serializers.Serializer
@@ -100,6 +103,7 @@ class QuizAttemptResultSerializer(
 # TEACHER TOPIC PERFORMANCE
 # ============================================================
 
+
 class TopicPerformanceStudentSerializer(
     serializers.Serializer
 ):
@@ -131,6 +135,7 @@ class TopicPerformanceSerializer(
 # ============================================================
 # LEARNING PATH
 # ============================================================
+
 
 class PreviousTopicSerializer(
     serializers.Serializer
@@ -167,7 +172,9 @@ class LearningPathTopicSerializer(
 
     mastery_score = serializers.FloatField()
 
-    percentage = serializers.FloatField()
+    percentage = serializers.FloatField(
+        allow_null=True
+    )
 
     previous_topic = PreviousTopicSerializer(
         allow_null=True
@@ -202,6 +209,7 @@ class LearningPathResponseSerializer(
 # CHAPTER PROGRESS
 # ============================================================
 
+
 class ChapterProgressTopicSerializer(
     serializers.Serializer
 ):
@@ -213,7 +221,9 @@ class ChapterProgressTopicSerializer(
 
     mastery_score = serializers.FloatField()
 
-    percentage = serializers.FloatField()
+    percentage = serializers.FloatField(
+        allow_null=True
+    )
 
     attempt_count = serializers.IntegerField()
 
@@ -277,8 +287,66 @@ class ChapterProgressResponseSerializer(
 
 
 # ============================================================
+# SUBJECT PROGRESS
+# ============================================================
+
+
+class SubjectProgressItemSerializer(
+    serializers.Serializer
+):
+    subject_id = serializers.IntegerField()
+
+    subject_name = serializers.CharField()
+
+    subject_type = serializers.CharField()
+
+    subject_type_display = serializers.CharField()
+
+    language = serializers.CharField()
+
+    status = serializers.CharField()
+
+    total_chapters = serializers.IntegerField()
+
+    total_topics = serializers.IntegerField()
+
+    started_topics = serializers.IntegerField()
+
+    completed_topics = serializers.IntegerField()
+
+    remaining_topics = serializers.IntegerField()
+
+    completion_percentage = serializers.FloatField()
+
+    average_mastery = serializers.FloatField()
+
+
+class SubjectProgressSummarySerializer(
+    serializers.Serializer
+):
+    total_subjects = serializers.IntegerField()
+
+    completed_subjects = serializers.IntegerField()
+
+    in_progress_subjects = serializers.IntegerField()
+
+    not_started_subjects = serializers.IntegerField()
+
+
+class SubjectProgressResponseSerializer(
+    serializers.Serializer
+):
+    summary = SubjectProgressSummarySerializer()
+
+    subjects = SubjectProgressItemSerializer(
+        many=True
+    )
+
+
+# ============================================================
 # STUDENT DASHBOARD
 # ============================================================
+
 
 class DashboardStudentSerializer(
     serializers.Serializer
@@ -389,6 +457,11 @@ class DashboardResponseSerializer(
 
     overview = DashboardOverviewSerializer()
 
+    # Subject progress cards for React dashboard.
+    subject_progress = SubjectProgressItemSerializer(
+        many=True
+    )
+
     continue_learning = ContinueLearningSerializer(
         allow_null=True
     )
@@ -402,60 +475,5 @@ class DashboardResponseSerializer(
     )
 
     recent_activity = RecentActivitySerializer(
-        many=True
-    )
-# ============================================================
-# SUBJECT PROGRESS
-# ============================================================
-
-
-class SubjectProgressItemSerializer(
-    serializers.Serializer
-):
-    subject_id = serializers.IntegerField()
-
-    subject_name = serializers.CharField()
-
-    subject_type = serializers.CharField()
-
-    subject_type_display = serializers.CharField()
-
-    language = serializers.CharField()
-
-    status = serializers.CharField()
-
-    total_chapters = serializers.IntegerField()
-
-    total_topics = serializers.IntegerField()
-
-    started_topics = serializers.IntegerField()
-
-    completed_topics = serializers.IntegerField()
-
-    remaining_topics = serializers.IntegerField()
-
-    completion_percentage = serializers.FloatField()
-
-    average_mastery = serializers.FloatField()
-
-
-class SubjectProgressSummarySerializer(
-    serializers.Serializer
-):
-    total_subjects = serializers.IntegerField()
-
-    completed_subjects = serializers.IntegerField()
-
-    in_progress_subjects = serializers.IntegerField()
-
-    not_started_subjects = serializers.IntegerField()
-
-
-class SubjectProgressResponseSerializer(
-    serializers.Serializer
-):
-    summary = SubjectProgressSummarySerializer()
-
-    subjects = SubjectProgressItemSerializer(
         many=True
     )
