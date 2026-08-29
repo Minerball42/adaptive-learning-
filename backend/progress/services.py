@@ -1,6 +1,7 @@
 from courses.models import Topic
 
 from .models import QuizAttempt
+from .access import get_allowed_subject_ids
 
 
 # =========================================================
@@ -92,6 +93,7 @@ def calculate_mastery_score(
 # =========================================================
 
 def empty_difficulty_stats():
+
     return {
         1: {
             "correct": 0,
@@ -108,7 +110,11 @@ def empty_difficulty_stats():
     }
 
 
-def calculate_accuracy(correct, total):
+def calculate_accuracy(
+    correct,
+    total,
+):
+
     if total == 0:
         return None
 
@@ -119,7 +125,7 @@ def calculate_accuracy(correct, total):
 
 
 def build_difficulty_performance(
-    difficulty_stats
+    difficulty_stats,
 ):
     """
     Return readable Easy/Medium/Hard
@@ -141,8 +147,14 @@ def build_difficulty_performance(
         ]
 
         result[name] = {
-            "correct": values["correct"],
-            "total": values["total"],
+            "correct": (
+                values["correct"]
+            ),
+
+            "total": (
+                values["total"]
+            ),
+
             "percentage": (
                 calculate_accuracy(
                     values["correct"],
@@ -173,7 +185,6 @@ def determine_adaptive_level(
 
     Developing:
         mastery >= 50
-        OR strong Easy performance
 
     Good:
         mastery >= 70
@@ -183,6 +194,10 @@ def determine_adaptive_level(
         mastery >= 85
         AND sufficient Hard evidence
     """
+
+    # -----------------------------------------------------
+    # WEAK
+    # -----------------------------------------------------
 
     if mastery_score < 50:
         return "weak"
@@ -205,9 +220,9 @@ def determine_adaptive_level(
 
     if mastery_score >= 85:
 
-        hard_percentage = hard[
-            "percentage"
-        ]
+        hard_percentage = (
+            hard["percentage"]
+        )
 
         if (
             hard["total"]
@@ -226,9 +241,9 @@ def determine_adaptive_level(
 
     if mastery_score >= 70:
 
-        medium_percentage = medium[
-            "percentage"
-        ]
+        medium_percentage = (
+            medium["percentage"]
+        )
 
         if (
             medium["total"]
@@ -258,10 +273,36 @@ def determine_adaptive_level(
 # =========================================================
 
 def get_student_topic_stats(student):
+    """
+    Collect quiz-attempt statistics only for
+    subjects currently available to the student.
+
+    Allowed subjects are:
+
+    - Core subjects
+    - Selected language subjects
+    - Selected optional subjects
+    """
+
+    if (
+        student is None
+        or not student.grade_id
+    ):
+        return {}
+
+    allowed_subject_ids = (
+        get_allowed_subject_ids(
+            student
+        )
+    )
 
     attempts = (
         QuizAttempt.objects.filter(
-            student=student
+            student=student,
+
+            quiz__topic__chapter__subject_id__in=(
+                allowed_subject_ids
+            ),
         )
         .select_related(
             "quiz",
@@ -280,9 +321,15 @@ def get_student_topic_stats(student):
 
     stats = {}
 
+    # -----------------------------------------------------
+    # PROCESS ATTEMPTS
+    # -----------------------------------------------------
+
     for attempt in attempts:
 
-        topic = attempt.quiz.topic
+        topic = (
+            attempt.quiz.topic
+        )
 
         if topic.id not in stats:
 
@@ -297,14 +344,22 @@ def get_student_topic_stats(student):
                 ),
             }
 
-        topic_stats = stats[
-            topic.id
-        ]
+        topic_stats = (
+            stats[
+                topic.id
+            ]
+        )
 
         attempt_correct = 0
         attempt_total = 0
 
-        for answer in attempt.answers.all():
+        # -------------------------------------------------
+        # PROCESS ANSWERS
+        # -------------------------------------------------
+
+        for answer in (
+            attempt.answers.all()
+        ):
 
             attempt_total += 1
 
@@ -339,6 +394,10 @@ def get_student_topic_stats(student):
                     "difficulty_stats"
                 ][difficulty]["correct"] += 1
 
+        # -------------------------------------------------
+        # ATTEMPT PERCENTAGE
+        # -------------------------------------------------
+
         if attempt_total > 0:
 
             attempt_percentage = (
@@ -366,7 +425,9 @@ def get_student_topic_stats(student):
 # BUILD MASTERY DATA
 # =========================================================
 
-def build_mastery_data(topic_stats):
+def build_mastery_data(
+    topic_stats,
+):
 
     correct = topic_stats[
         "correct"
@@ -380,13 +441,21 @@ def build_mastery_data(topic_stats):
         "attempt_count"
     ]
 
-    attempt_percentages = topic_stats[
-        "attempt_percentages"
-    ]
+    attempt_percentages = (
+        topic_stats[
+            "attempt_percentages"
+        ]
+    )
 
-    difficulty_stats = topic_stats[
-        "difficulty_stats"
-    ]
+    difficulty_stats = (
+        topic_stats[
+            "difficulty_stats"
+        ]
+    )
+
+    # -----------------------------------------------------
+    # NOT STARTED
+    # -----------------------------------------------------
 
     if total == 0:
 
@@ -394,21 +463,28 @@ def build_mastery_data(topic_stats):
             "correct": 0,
             "total": 0,
             "attempt_count": 0,
+
             "percentage": None,
+
             "recent_percentage": None,
+
             "mastery_score": 0,
+
             "level": "not_started",
+
             "difficulty_performance": {
                 "easy": {
                     "correct": 0,
                     "total": 0,
                     "percentage": None,
                 },
+
                 "medium": {
                     "correct": 0,
                     "total": 0,
                     "percentage": None,
                 },
+
                 "hard": {
                     "correct": 0,
                     "total": 0,
@@ -418,7 +494,7 @@ def build_mastery_data(topic_stats):
         }
 
     # -----------------------------------------------------
-    # LIFETIME
+    # LIFETIME PERFORMANCE
     # -----------------------------------------------------
 
     lifetime_percentage = (
@@ -426,7 +502,7 @@ def build_mastery_data(topic_stats):
     ) * 100
 
     # -----------------------------------------------------
-    # RECENT
+    # RECENT PERFORMANCE
     # -----------------------------------------------------
 
     recent_values = (
@@ -449,7 +525,7 @@ def build_mastery_data(topic_stats):
         )
 
     # -----------------------------------------------------
-    # WEIGHTED SCORE
+    # WEIGHTED MASTERY SCORE
     # -----------------------------------------------------
 
     mastery_score = (
@@ -470,17 +546,28 @@ def build_mastery_data(topic_stats):
     )
 
     # -----------------------------------------------------
-    # FINAL LEVEL
+    # FINAL ADAPTIVE LEVEL
     # -----------------------------------------------------
 
-    level = determine_adaptive_level(
-        mastery_score,
-        difficulty_performance,
+    level = (
+        determine_adaptive_level(
+            mastery_score,
+            difficulty_performance,
+        )
     )
 
+    # -----------------------------------------------------
+    # RESULT
+    # -----------------------------------------------------
+
     return {
-        "correct": correct,
-        "total": total,
+        "correct": (
+            correct
+        ),
+
+        "total": (
+            total
+        ),
 
         "attempt_count": (
             attempt_count
@@ -500,7 +587,9 @@ def build_mastery_data(topic_stats):
             mastery_score
         ),
 
-        "level": level,
+        "level": (
+            level
+        ),
 
         "difficulty_performance": (
             difficulty_performance
@@ -516,6 +605,13 @@ def get_topic_mastery(
     student,
     topic,
 ):
+    """
+    Return mastery information for one topic.
+
+    This function intentionally remains topic-based
+    because it is also used by the adaptive engine
+    and topic-locking logic.
+    """
 
     attempts = (
         QuizAttempt.objects.filter(
@@ -546,12 +642,18 @@ def get_topic_mastery(
         ),
     }
 
+    # -----------------------------------------------------
+    # PROCESS ATTEMPTS
+    # -----------------------------------------------------
+
     for attempt in attempts:
 
         attempt_correct = 0
         attempt_total = 0
 
-        for answer in attempt.answers.all():
+        for answer in (
+            attempt.answers.all()
+        ):
 
             attempt_total += 1
 
@@ -616,29 +718,49 @@ def get_topic_mastery(
 # =========================================================
 
 def build_student_topic_performance(
-    student
+    student,
 ):
+    """
+    Return mastery information for topics that
+    the student has attempted.
 
-    stats = get_student_topic_stats(
-        student
+    Attempts from subjects that are no longer
+    available to the student are excluded.
+    """
+
+    stats = (
+        get_student_topic_stats(
+            student
+        )
     )
 
     results = []
 
-    for topic_stats in stats.values():
+    for topic_stats in (
+        stats.values()
+    ):
 
-        topic = topic_stats[
-            "topic"
-        ]
+        topic = (
+            topic_stats[
+                "topic"
+            ]
+        )
 
-        mastery = build_mastery_data(
-            topic_stats
+        mastery = (
+            build_mastery_data(
+                topic_stats
+            )
         )
 
         results.append(
             {
-                "topic_id": topic.id,
-                "topic_name": topic.name,
+                "topic_id": (
+                    topic.id
+                ),
+
+                "topic_name": (
+                    topic.name
+                ),
 
                 "chapter_id": (
                     topic.chapter.id
@@ -677,25 +799,45 @@ def build_student_topic_performance(
 # NEXT TOPIC
 # =========================================================
 
-def get_next_topic(topic):
+def get_next_topic(
+    topic,
+):
+    """
+    Return the next topic inside the same subject.
+
+    First checks later topics in the current
+    chapter. If none exist, moves to the next
+    chapter in the same subject.
+    """
+
+    # -----------------------------------------------------
+    # SAME CHAPTER
+    # -----------------------------------------------------
 
     next_topic = (
         Topic.objects.filter(
             chapter=topic.chapter,
             id__gt=topic.id,
         )
-        .order_by("id")
+        .order_by(
+            "id"
+        )
         .first()
     )
 
     if next_topic:
         return next_topic
 
+    # -----------------------------------------------------
+    # NEXT CHAPTER
+    # -----------------------------------------------------
+
     return (
         Topic.objects.filter(
             chapter__subject=(
                 topic.chapter.subject
             ),
+
             chapter__chapter_number__gt=(
                 topic.chapter.chapter_number
             ),
@@ -721,13 +863,20 @@ def create_recommendation(
     mastery,
 ):
 
-    level = mastery[
-        "level"
-    ]
+    level = (
+        mastery[
+            "level"
+        ]
+    )
 
     base = {
-        "topic_id": topic.id,
-        "topic_name": topic.name,
+        "topic_id": (
+            topic.id
+        ),
+
+        "topic_name": (
+            topic.name
+        ),
 
         "chapter_id": (
             topic.chapter.id
@@ -746,7 +895,9 @@ def create_recommendation(
         ),
 
         "percentage": (
-            mastery["percentage"]
+            mastery[
+                "percentage"
+            ]
         ),
 
         "recent_percentage": (
@@ -756,13 +907,19 @@ def create_recommendation(
         ),
 
         "mastery_score": (
-            mastery["mastery_score"]
+            mastery[
+                "mastery_score"
+            ]
         ),
 
-        "level": level,
+        "level": (
+            level
+        ),
 
         "attempt_count": (
-            mastery["attempt_count"]
+            mastery[
+                "attempt_count"
+            ]
         ),
 
         "difficulty_performance": (
@@ -872,9 +1029,10 @@ def create_recommendation(
                 ),
 
                 "message": (
-                    "You have demonstrated Medium-level "
-                    "understanding. Attempt Hard questions "
-                    "to prove mastery."
+                    "You have demonstrated "
+                    "Medium-level understanding. "
+                    "Attempt Hard questions to "
+                    "prove mastery."
                 ),
 
                 "recommended_difficulty": (
@@ -897,8 +1055,10 @@ def create_recommendation(
     # STRONG
     # -----------------------------------------------------
 
-    next_topic = get_next_topic(
-        topic
+    next_topic = (
+        get_next_topic(
+            topic
+        )
     )
 
     next_topic_data = None
@@ -906,8 +1066,13 @@ def create_recommendation(
     if next_topic:
 
         next_topic_data = {
-            "id": next_topic.id,
-            "name": next_topic.name,
+            "id": (
+                next_topic.id
+            ),
+
+            "name": (
+                next_topic.name
+            ),
 
             "chapter_id": (
                 next_topic.chapter.id
@@ -944,7 +1109,9 @@ def create_recommendation(
                 f"{topic.name} mastered"
             ),
 
-            "message": message,
+            "message": (
+                message
+            ),
 
             "recommended_difficulty": (
                 "hard"
@@ -952,7 +1119,9 @@ def create_recommendation(
 
             "difficulty_value": 3,
 
-            "action": "move_forward",
+            "action": (
+                "move_forward"
+            ),
 
             "next_topic": (
                 next_topic_data
@@ -964,16 +1133,21 @@ def create_recommendation(
 
 
 # =========================================================
-# NOT STARTED
+# NOT STARTED RECOMMENDATION
 # =========================================================
 
 def create_not_started_recommendation(
-    topic
+    topic,
 ):
 
     return {
-        "topic_id": topic.id,
-        "topic_name": topic.name,
+        "topic_id": (
+            topic.id
+        ),
+
+        "topic_name": (
+            topic.name
+        ),
 
         "chapter_id": (
             topic.chapter.id
@@ -992,11 +1166,14 @@ def create_not_started_recommendation(
         ),
 
         "percentage": None,
+
         "recent_percentage": None,
 
         "mastery_score": 0,
 
-        "level": "not_started",
+        "level": (
+            "not_started"
+        ),
 
         "attempt_count": 0,
 
@@ -1006,11 +1183,13 @@ def create_not_started_recommendation(
                 "total": 0,
                 "percentage": None,
             },
+
             "medium": {
                 "correct": 0,
                 "total": 0,
                 "percentage": None,
             },
+
             "hard": {
                 "correct": 0,
                 "total": 0,
@@ -1053,10 +1232,24 @@ def create_not_started_recommendation(
 # =========================================================
 
 def build_student_recommendations(
-    student
+    student,
 ):
+    """
+    Build recommendations only from subjects
+    currently available to the student.
 
-    if not student.grade:
+    This prevents recommendations from showing
+    unrelated languages or optional subjects.
+    """
+
+    # -----------------------------------------------------
+    # NO GRADE
+    # -----------------------------------------------------
+
+    if (
+        student is None
+        or not student.grade_id
+    ):
 
         return {
             "summary": {
@@ -1067,13 +1260,28 @@ def build_student_recommendations(
                 "good": 0,
                 "strong": 0,
             },
+
             "recommendations": [],
         }
 
+    # -----------------------------------------------------
+    # STUDENT ALLOWED SUBJECTS
+    # -----------------------------------------------------
+
+    allowed_subject_ids = (
+        get_allowed_subject_ids(
+            student
+        )
+    )
+
+    # -----------------------------------------------------
+    # ALLOWED TOPICS ONLY
+    # -----------------------------------------------------
+
     topics = list(
         Topic.objects.filter(
-            chapter__subject__grade=(
-                student.grade
+            chapter__subject_id__in=(
+                allowed_subject_ids
             )
         )
         .select_related(
@@ -1081,32 +1289,56 @@ def build_student_recommendations(
             "chapter__subject",
         )
         .order_by(
+            "chapter__subject__display_order",
             "chapter__subject__name",
             "chapter__chapter_number",
             "id",
         )
     )
 
-    stats = get_student_topic_stats(
-        student
+    # -----------------------------------------------------
+    # EXISTING STUDENT PERFORMANCE
+    # -----------------------------------------------------
+
+    stats = (
+        get_student_topic_stats(
+            student
+        )
     )
 
     summary = {
-        "total_topics": len(topics),
+        "total_topics": (
+            len(topics)
+        ),
+
         "not_started": 0,
+
         "weak": 0,
+
         "developing": 0,
+
         "good": 0,
+
         "strong": 0,
     }
 
     recommendations = []
 
+    # -----------------------------------------------------
+    # PROCESS EVERY ALLOWED TOPIC
+    # -----------------------------------------------------
+
     for topic in topics:
 
-        topic_stats = stats.get(
-            topic.id
+        topic_stats = (
+            stats.get(
+                topic.id
+            )
         )
+
+        # -------------------------------------------------
+        # NOT STARTED
+        # -------------------------------------------------
 
         if not topic_stats:
 
@@ -1122,8 +1354,14 @@ def build_student_recommendations(
 
             continue
 
-        mastery = build_mastery_data(
-            topic_stats
+        # -------------------------------------------------
+        # EXISTING MASTERY
+        # -------------------------------------------------
+
+        mastery = (
+            build_mastery_data(
+                topic_stats
+            )
         )
 
         summary[
@@ -1137,6 +1375,10 @@ def build_student_recommendations(
             )
         )
 
+    # -----------------------------------------------------
+    # PRIORITY ORDER
+    # -----------------------------------------------------
+
     recommendations.sort(
         key=lambda item: (
             item["priority"],
@@ -1147,8 +1389,15 @@ def build_student_recommendations(
         )
     )
 
+    # -----------------------------------------------------
+    # FINAL RESPONSE
+    # -----------------------------------------------------
+
     return {
-        "summary": summary,
+        "summary": (
+            summary
+        ),
+
         "recommendations": (
             recommendations
         ),

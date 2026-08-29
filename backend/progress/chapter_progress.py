@@ -1,32 +1,72 @@
 from courses.models import Chapter
 
+from .access import get_allowed_subject_ids
 from .services import get_topic_mastery
+
+
+# ============================================================
+# EMPTY RESULT
+# ============================================================
+
+
+def empty_chapter_progress():
+    """
+    Return an empty chapter-progress response.
+    """
+
+    return {
+        "summary": {
+            "total_chapters": 0,
+            "completed_chapters": 0,
+            "in_progress_chapters": 0,
+            "not_started_chapters": 0,
+            "overall_completion_percentage": 0,
+        },
+        "chapters": [],
+    }
+
+
+# ============================================================
+# BUILD CHAPTER PROGRESS
+# ============================================================
 
 
 def build_chapter_progress(student):
     """
     Build chapter-level progress for the
-    student's assigned grade.
+    student's allowed subjects.
 
-    Only chapters that currently contain
-    topics are included.
+    Allowed subjects are:
+
+    - Core subjects for the student's grade
+    - Student-selected language subjects
+    - Student-selected optional subjects
+
+    Only chapters containing at least one topic
+    are included.
     """
 
-    if not student.grade:
-        return {
-            "summary": {
-                "total_chapters": 0,
-                "completed_chapters": 0,
-                "in_progress_chapters": 0,
-                "not_started_chapters": 0,
-                "overall_completion_percentage": 0,
-            },
-            "chapters": [],
-        }
+    if (
+        student is None
+        or not student.grade_id
+    ):
+        return empty_chapter_progress()
+
+    allowed_subject_ids = (
+        get_allowed_subject_ids(
+            student
+        )
+    )
+
+    # ========================================================
+    # ALLOWED CHAPTERS ONLY
+    # ========================================================
 
     chapters = (
         Chapter.objects.filter(
-            subject__grade=student.grade,
+            subject_id__in=(
+                allowed_subject_ids
+            ),
             topics__isnull=False,
         )
         .select_related(
@@ -38,8 +78,10 @@ def build_chapter_progress(student):
         )
         .distinct()
         .order_by(
+            "subject__display_order",
             "subject__name",
             "chapter_number",
+            "id",
         )
     )
 
@@ -49,17 +91,21 @@ def build_chapter_progress(student):
     in_progress_chapters = 0
     not_started_chapters = 0
 
-    # ---------------------------------------------------------
+    # ========================================================
     # PROCESS EACH CHAPTER
-    # ---------------------------------------------------------
+    # ========================================================
 
     for chapter in chapters:
 
         topics = list(
-            chapter.topics.all().order_by("id")
+            chapter.topics.all().order_by(
+                "id"
+            )
         )
 
-        total_topics = len(topics)
+        total_topics = len(
+            topics
+        )
 
         completed_topics = 0
         started_topics = 0
@@ -68,9 +114,9 @@ def build_chapter_progress(student):
 
         topic_results = []
 
-        # -----------------------------------------------------
+        # ====================================================
         # PROCESS TOPICS
-        # -----------------------------------------------------
+        # ====================================================
 
         for topic in topics:
 
@@ -79,100 +125,172 @@ def build_chapter_progress(student):
                 topic,
             )
 
-            level = mastery["level"]
+            level = mastery[
+                "level"
+            ]
+
+            # ------------------------------------------------
+            # STARTED
+            # ------------------------------------------------
 
             if level != "not_started":
                 started_topics += 1
 
+            # ------------------------------------------------
+            # COMPLETED
+            # ------------------------------------------------
+
             if level == "strong":
                 completed_topics += 1
 
+            # ------------------------------------------------
+            # MASTERY
+            # ------------------------------------------------
+
             mastery_scores.append(
-                mastery["mastery_score"]
+                mastery[
+                    "mastery_score"
+                ]
             )
+
+            # ------------------------------------------------
+            # TOPIC RESULT
+            # ------------------------------------------------
 
             topic_results.append(
                 {
-                    "topic_id": topic.id,
-                    "topic_name": topic.name,
-                    "level": level,
+                    "topic_id": (
+                        topic.id
+                    ),
+
+                    "topic_name": (
+                        topic.name
+                    ),
+
+                    "level": (
+                        level
+                    ),
+
                     "mastery_score": (
-                        mastery["mastery_score"]
+                        mastery[
+                            "mastery_score"
+                        ]
                     ),
+
                     "percentage": (
-                        mastery["percentage"]
+                        mastery[
+                            "percentage"
+                        ]
                     ),
+
                     "attempt_count": (
-                        mastery["attempt_count"]
+                        mastery[
+                            "attempt_count"
+                        ]
                     ),
                 }
             )
 
-        # -----------------------------------------------------
+        # ====================================================
         # COMPLETION PERCENTAGE
-        # -----------------------------------------------------
+        # ====================================================
 
         if total_topics > 0:
+
             completion_percentage = (
                 completed_topics
                 / total_topics
             ) * 100
+
         else:
+
             completion_percentage = 0
 
-        # -----------------------------------------------------
+        # ====================================================
         # AVERAGE MASTERY
-        # -----------------------------------------------------
+        # ====================================================
 
         if mastery_scores:
+
             average_mastery = (
-                sum(mastery_scores)
-                / len(mastery_scores)
+                sum(
+                    mastery_scores
+                )
+                / len(
+                    mastery_scores
+                )
             )
+
         else:
+
             average_mastery = 0
 
-        # -----------------------------------------------------
+        # ====================================================
         # CHAPTER STATUS
-        # -----------------------------------------------------
+        # ====================================================
 
         if (
             total_topics > 0
-            and completed_topics == total_topics
+            and
+            completed_topics
+            == total_topics
         ):
-            chapter_status = "completed"
+
+            chapter_status = (
+                "completed"
+            )
+
             completed_chapters += 1
 
         elif started_topics > 0:
-            chapter_status = "in_progress"
+
+            chapter_status = (
+                "in_progress"
+            )
+
             in_progress_chapters += 1
 
         else:
-            chapter_status = "not_started"
+
+            chapter_status = (
+                "not_started"
+            )
+
             not_started_chapters += 1
 
-        # -----------------------------------------------------
-        # RESULT
-        # -----------------------------------------------------
+        # ====================================================
+        # CHAPTER RESULT
+        # ====================================================
 
         chapter_results.append(
             {
-                "chapter_id": chapter.id,
+                "chapter_id": (
+                    chapter.id
+                ),
+
                 "chapter_number": (
                     chapter.chapter_number
                 ),
-                "chapter_name": chapter.name,
+
+                "chapter_name": (
+                    chapter.name
+                ),
 
                 "subject_id": (
                     chapter.subject.id
                 ),
+
                 "subject_name": (
                     chapter.subject.name
                 ),
 
-                "status": chapter_status,
+                "status": (
+                    chapter_status
+                ),
 
-                "total_topics": total_topics,
+                "total_topics": (
+                    total_topics
+                ),
 
                 "started_topics": (
                     started_topics
@@ -197,25 +315,34 @@ def build_chapter_progress(student):
                     2,
                 ),
 
-                "topics": topic_results,
+                "topics": (
+                    topic_results
+                ),
             }
         )
 
-    # ---------------------------------------------------------
+    # ========================================================
     # OVERALL SUMMARY
-    # ---------------------------------------------------------
+    # ========================================================
 
     total_chapters = len(
         chapter_results
     )
 
     if total_chapters > 0:
+
         overall_completion_percentage = (
             completed_chapters
             / total_chapters
         ) * 100
+
     else:
+
         overall_completion_percentage = 0
+
+    # ========================================================
+    # FINAL RESPONSE
+    # ========================================================
 
     return {
         "summary": {
@@ -241,5 +368,7 @@ def build_chapter_progress(student):
             ),
         },
 
-        "chapters": chapter_results,
+        "chapters": (
+            chapter_results
+        ),
     }

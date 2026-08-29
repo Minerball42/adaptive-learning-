@@ -1,17 +1,51 @@
+from .access import get_allowed_subject_ids
 from .chapter_progress import build_chapter_progress
 from .learning_path import build_learning_path
 from .services import build_student_recommendations
 from .models import QuizAttempt
 
 
-def build_recent_activity(student, limit=5):
+# ============================================================
+# RECENT ACTIVITY
+# ============================================================
+
+
+def build_recent_activity(
+    student,
+    limit=5,
+):
     """
     Return the student's latest quiz attempts.
+
+    Only attempts from subjects currently available
+    to the student are included.
+
+    Allowed subjects:
+
+    - Core subjects
+    - Selected language subjects
+    - Selected optional subjects
     """
+
+    if (
+        student is None
+        or not student.grade_id
+    ):
+        return []
+
+    allowed_subject_ids = (
+        get_allowed_subject_ids(
+            student
+        )
+    )
 
     attempts = (
         QuizAttempt.objects.filter(
-            student=student
+            student=student,
+
+            quiz__topic__chapter__subject_id__in=(
+                allowed_subject_ids
+            ),
         )
         .select_related(
             "quiz",
@@ -27,39 +61,76 @@ def build_recent_activity(student, limit=5):
 
     results = []
 
+    # ========================================================
+    # PROCESS ATTEMPTS
+    # ========================================================
+
     for attempt in attempts:
 
         if attempt.total_questions > 0:
+
             percentage = (
                 attempt.score
                 / attempt.total_questions
             ) * 100
+
         else:
+
             percentage = 0
 
-        topic = attempt.quiz.topic
+        topic = (
+            attempt.quiz.topic
+        )
+
+        chapter = (
+            topic.chapter
+        )
+
+        subject = (
+            chapter.subject
+        )
 
         results.append(
             {
-                "attempt_id": attempt.id,
+                "attempt_id": (
+                    attempt.id
+                ),
 
-                "quiz_id": attempt.quiz.id,
-                "quiz_title": attempt.quiz.title,
+                "quiz_id": (
+                    attempt.quiz.id
+                ),
 
-                "topic_id": topic.id,
-                "topic_name": topic.name,
+                "quiz_title": (
+                    attempt.quiz.title
+                ),
 
-                "chapter_id": topic.chapter.id,
-                "chapter_name": topic.chapter.name,
+                "topic_id": (
+                    topic.id
+                ),
+
+                "topic_name": (
+                    topic.name
+                ),
+
+                "chapter_id": (
+                    chapter.id
+                ),
+
+                "chapter_name": (
+                    chapter.name
+                ),
 
                 "subject_id": (
-                    topic.chapter.subject.id
-                ),
-                "subject_name": (
-                    topic.chapter.subject.name
+                    subject.id
                 ),
 
-                "score": attempt.score,
+                "subject_name": (
+                    subject.name
+                ),
+
+                "score": (
+                    attempt.score
+                ),
 
                 "total_questions": (
                     attempt.total_questions
@@ -79,15 +150,24 @@ def build_recent_activity(student, limit=5):
     return results
 
 
-def get_continue_learning(learning_path):
+# ============================================================
+# CONTINUE LEARNING
+# ============================================================
+
+
+def get_continue_learning(
+    learning_path,
+):
     """
     Find the first unlocked topic that has not
-    yet been mastered.
+    yet reached Strong mastery.
     """
 
-    topics = learning_path.get(
-        "topics",
-        [],
+    topics = (
+        learning_path.get(
+            "topics",
+            [],
+        )
     )
 
     for topic in topics:
@@ -97,41 +177,60 @@ def get_continue_learning(learning_path):
             and
             topic["level"] != "strong"
         ):
+
             return {
                 "topic_id": (
-                    topic["topic_id"]
+                    topic[
+                        "topic_id"
+                    ]
                 ),
 
                 "topic_name": (
-                    topic["topic_name"]
+                    topic[
+                        "topic_name"
+                    ]
                 ),
 
                 "chapter_id": (
-                    topic["chapter_id"]
+                    topic[
+                        "chapter_id"
+                    ]
                 ),
 
                 "chapter_name": (
-                    topic["chapter_name"]
+                    topic[
+                        "chapter_name"
+                    ]
                 ),
 
                 "subject_id": (
-                    topic["subject_id"]
+                    topic[
+                        "subject_id"
+                    ]
                 ),
 
                 "subject_name": (
-                    topic["subject_name"]
+                    topic[
+                        "subject_name"
+                    ]
                 ),
 
                 "level": (
-                    topic["level"]
+                    topic[
+                        "level"
+                    ]
                 ),
 
                 "mastery_score": (
-                    topic["mastery_score"]
+                    topic[
+                        "mastery_score"
+                    ]
                 ),
 
                 "status": (
-                    topic["status"]
+                    topic[
+                        "status"
+                    ]
                 ),
 
                 "action": (
@@ -142,10 +241,24 @@ def get_continue_learning(learning_path):
     return None
 
 
-def build_dashboard(student):
+# ============================================================
+# BUILD DASHBOARD
+# ============================================================
+
+
+def build_dashboard(
+    student,
+):
     """
     Build the complete student dashboard.
+
+    Dashboard information is generated only from
+    subjects currently available to the student.
     """
+
+    # ========================================================
+    # LEARNING PATH
+    # ========================================================
 
     learning_path = (
         build_learning_path(
@@ -153,17 +266,29 @@ def build_dashboard(student):
         )
     )
 
+    # ========================================================
+    # CHAPTER PROGRESS
+    # ========================================================
+
     chapter_progress = (
         build_chapter_progress(
             student
         )
     )
 
+    # ========================================================
+    # RECOMMENDATIONS
+    # ========================================================
+
     recommendations_data = (
         build_student_recommendations(
             student
         )
     )
+
+    # ========================================================
+    # RECENT ACTIVITY
+    # ========================================================
 
     recent_activity = (
         build_recent_activity(
@@ -172,52 +297,69 @@ def build_dashboard(student):
         )
     )
 
+    # ========================================================
+    # CONTINUE LEARNING
+    # ========================================================
+
     continue_learning = (
         get_continue_learning(
             learning_path
         )
     )
 
-    # ---------------------------------------------------------
+    # ========================================================
     # LEARNING PATH SUMMARY
-    # ---------------------------------------------------------
+    # ========================================================
 
-    path_summary = learning_path.get(
-        "summary",
-        {},
+    path_summary = (
+        learning_path.get(
+            "summary",
+            {},
+        )
     )
 
-    total_topics = path_summary.get(
-        "total_topics",
-        0,
+    total_topics = (
+        path_summary.get(
+            "total_topics",
+            0,
+        )
     )
 
-    completed_topics = path_summary.get(
-        "completed",
-        0,
+    completed_topics = (
+        path_summary.get(
+            "completed",
+            0,
+        )
     )
 
-    available_topics = path_summary.get(
-        "available",
-        0,
+    available_topics = (
+        path_summary.get(
+            "available",
+            0,
+        )
     )
 
-    locked_topics = path_summary.get(
-        "locked",
-        0,
+    locked_topics = (
+        path_summary.get(
+            "locked",
+            0,
+        )
     )
 
     if total_topics > 0:
+
         topic_completion_percentage = (
             completed_topics
             / total_topics
         ) * 100
+
     else:
+
         topic_completion_percentage = 0
 
-    # ---------------------------------------------------------
+    # ========================================================
     # CHAPTER SUMMARY
-    # ---------------------------------------------------------
+    # ========================================================
 
     chapter_summary = (
         chapter_progress.get(
@@ -226,9 +368,9 @@ def build_dashboard(student):
         )
     )
 
-    # ---------------------------------------------------------
+    # ========================================================
     # TOP RECOMMENDATIONS
-    # ---------------------------------------------------------
+    # ========================================================
 
     all_recommendations = (
         recommendations_data.get(
@@ -241,49 +383,60 @@ def build_dashboard(student):
         recommendation
         for recommendation
         in all_recommendations
-        if recommendation["level"] != "strong"
+        if (
+            recommendation["level"]
+            != "strong"
+        )
     ]
 
     top_recommendations = (
-        active_recommendations[:3]
+        active_recommendations[
+            :3
+        ]
     )
 
-    # ---------------------------------------------------------
+    # ========================================================
     # DASHBOARD STATE
-    # ---------------------------------------------------------
+    # ========================================================
 
     if (
         total_topics > 0
         and
         completed_topics == total_topics
     ):
+
         dashboard_status = (
             "all_available_topics_completed"
         )
 
     elif continue_learning:
+
         dashboard_status = (
             "learning_in_progress"
         )
 
     else:
+
         dashboard_status = (
             "ready_to_start"
         )
 
-    # ---------------------------------------------------------
+    # ========================================================
     # STUDENT INFORMATION
-    # ---------------------------------------------------------
+    # ========================================================
 
-    user = student.user
+    user = (
+        student.user
+    )
 
     grade_name = None
 
     if student.grade:
-        grade_name = student.grade.name
 
-    # getattr keeps this compatible if one of these
-    # optional Student fields changes later.
+        grade_name = (
+            student.grade.name
+        )
+
     school = getattr(
         student,
         "school",
@@ -296,16 +449,28 @@ def build_dashboard(student):
         "English",
     )
 
-    # ---------------------------------------------------------
+    # ========================================================
     # FINAL RESPONSE
-    # ---------------------------------------------------------
+    # ========================================================
 
     return {
         "student": {
-            "username": user.username,
-            "email": user.email,
-            "grade": grade_name,
-            "school": school,
+            "username": (
+                user.username
+            ),
+
+            "email": (
+                user.email
+            ),
+
+            "grade": (
+                grade_name
+            ),
+
+            "school": (
+                school
+            ),
+
             "preferred_language": (
                 preferred_language
             ),
