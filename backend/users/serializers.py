@@ -175,9 +175,34 @@ class StudentAvailableSubjectsResponseSerializer(
     )
 
 
-class StudentSubjectSelectionResponseSerializer(
+class TeacherStudentProgressResponseSerializer(
     serializers.Serializer
 ):
+    student = serializers.DictField()
+
+    status = serializers.CharField()
+
+    overview = serializers.DictField()
+
+    subject_progress = serializers.ListField(
+        child=serializers.DictField()
+    )
+
+    continue_learning = serializers.DictField(
+        allow_null=True
+    )
+
+    recommendations = serializers.ListField(
+        child=serializers.DictField()
+    )
+
+    chapters = serializers.ListField(
+        child=serializers.DictField()
+    )
+
+    recent_activity = serializers.ListField(
+        child=serializers.DictField()
+    )
     message = serializers.CharField()
 
     selected_subjects = StudentSelectedSubjectSerializer(

@@ -5,9 +5,11 @@ from progress.learning_path import (
 )
 from progress.models import QuizAttempt
 from progress.services import get_topic_mastery
-
+from django.db.models import Q
 from users.models import Student
-
+from progress.access import (
+    get_allowed_subject_ids,
+)
 
 def get_teacher_students(teacher):
     """
@@ -50,7 +52,47 @@ def get_teacher_student(
         .first()
     )
 
+def get_teacher_allowed_attempts(
+    teacher
+):
+    """
+    Return quiz attempts from the teacher's
+    students, but only for subjects currently
+    available to each student.
+    """
 
+    students = get_teacher_students(
+        teacher
+    )
+
+    attempt_filter = Q(
+        pk__in=[]
+    )
+
+    for student in students:
+
+        if not student.grade_id:
+            continue
+
+        allowed_subject_ids = list(
+            get_allowed_subject_ids(
+                student
+            )
+        )
+
+        if not allowed_subject_ids:
+            continue
+
+        attempt_filter |= Q(
+            student=student,
+            quiz__topic__chapter__subject_id__in=(
+                allowed_subject_ids
+            ),
+        )
+
+    return QuizAttempt.objects.filter(
+        attempt_filter
+    )
 def build_student_summary(student):
     """
     Build compact progress information
@@ -66,9 +108,18 @@ def build_student_summary(student):
         {},
     )
 
-    attempts = QuizAttempt.objects.filter(
-        student=student
+    allowed_subject_ids = (
+    get_allowed_subject_ids(
+        student
     )
+)
+
+    attempts = QuizAttempt.objects.filter(
+        student=student,
+        quiz__topic__chapter__subject_id__in=(
+        allowed_subject_ids
+    ),
+)
 
     attempt_count = attempts.count()
 
@@ -258,10 +309,10 @@ def build_teacher_dashboard(teacher):
         average_quiz_accuracy = 0
 
     total_attempts = (
-        QuizAttempt.objects.filter(
-            student__school=teacher.school
-        ).count()
-    )
+        get_teacher_allowed_attempts(
+        teacher
+    ).count()
+)
 
     return {
         "teacher": {
@@ -529,9 +580,9 @@ def build_teacher_recent_attempts(
     """
 
     attempts = (
-        QuizAttempt.objects.filter(
-            student__school=teacher.school
-        )
+        get_teacher_allowed_attempts(
+        teacher
+    )
         .select_related(
             "student",
             "student__user",
